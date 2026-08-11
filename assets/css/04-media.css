@@ -1,0 +1,211 @@
+/* ==========================================================================
+   04-media.css — 多媒體模組
+   每一個 class 都是一個可重複使用的「積木」，
+   在 index.html 裡自由複製、貼上、調換順序即可改變版面。
+
+   所有模組一律置中，與內文的置中軸線對齊；照片不做滿版排版。
+
+   模組清單：
+     .m-single  單張照片
+     .m-pair    兩張並排
+     .m-trio    三張組合（一大兩小）
+     .m-grid    多張照片網格（四張以上）
+     .m-video   影片
+     .m-chart   互動圖表
+   ========================================================================== */
+
+/* 所有模組共用的上下留白 */
+.m-single, .m-pair, .m-trio, .m-grid, .m-video, .m-chart {
+  margin: clamp(40px, 7vh, 72px) auto;
+}
+
+/* 圖說 —— 與照片一起置中 */
+.caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  color: var(--c-sub);
+  margin-top: 12px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* 照片群組共用：整組置中 */
+.m-pair__grid,
+.m-trio__grid,
+.m-grid__items {
+  display: grid;
+  gap: clamp(10px, 1.6vw, 18px);
+  justify-items: center;
+  align-items: start;
+  margin-inline: auto;
+}
+
+/* --------------------------------------------------------------------------
+   1. 單張照片
+   -------------------------------------------------------------------------- */
+.m-single img { width: 100%; margin-inline: auto; }
+
+/* --------------------------------------------------------------------------
+   2. 兩張並排
+   -------------------------------------------------------------------------- */
+.m-pair__grid { grid-template-columns: 1fr 1fr; }
+.m-pair__grid img { width: 100%; }
+
+/* --------------------------------------------------------------------------
+   3. 三張組合：左邊一張大圖，右邊兩張小圖
+   -------------------------------------------------------------------------- */
+.m-trio__grid {
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.m-trio__grid img { width: 100%; }
+.m-trio__grid > :first-child { grid-row: span 2; height: 100%; }
+.m-trio__grid > :first-child img { height: 100%; object-fit: cover; }
+
+/* --------------------------------------------------------------------------
+   4. 多張照片網格（四張以上）
+      預設兩欄；若總數為奇數，最後一張自動橫跨整列，維持整體置中
+   -------------------------------------------------------------------------- */
+.m-grid__items { grid-template-columns: repeat(2, 1fr); }
+.m-grid__items img { width: 100%; }
+.m-grid__items > img:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* 想改成三欄，把 m-grid 改成 "m-grid m-grid--3" */
+.m-grid--3 .m-grid__items { grid-template-columns: repeat(3, 1fr); }
+.m-grid--3 .m-grid__items > img:last-child:nth-child(odd) { grid-column: auto; }
+
+/* --------------------------------------------------------------------------
+   5. 影片模組
+      - 有填 data-video-src 時：顯示播放鍵，點擊後載入播放器
+      - 未填時：自動退回顯示劇照，不會壞版
+   -------------------------------------------------------------------------- */
+.m-video__frame {
+  position: relative;
+  background: var(--c-dark);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+}
+.m-video__frame > img,
+.m-video__frame > video,
+.m-video__frame > iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+
+/* 播放鍵 */
+.m-video__play {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: rgba(254, 35, 29, 0.92);
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s var(--ease), background 0.3s;
+}
+.m-video__play:hover { transform: translate(-50%, -50%) scale(1.1); }
+.m-video__play::before {
+  content: "";
+  border-style: solid;
+  border-width: 10px 0 10px 17px;
+  border-color: transparent transparent transparent #fff;
+  margin-left: 4px;
+}
+.m-video.is-playing .m-video__play { display: none; }
+
+/* 尚未提供影片來源時顯示的標記 */
+.m-video__pending {
+  position: absolute;
+  right: 12px; bottom: 12px;
+  padding: 5px 11px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+
+/* --------------------------------------------------------------------------
+   6. 互動圖表模組
+      HTML 只要寫一個空的 <div class="m-chart__canvas" data-src="...json">
+      charts.js 會讀 JSON 並畫出 SVG 圖表
+   -------------------------------------------------------------------------- */
+.m-chart__box {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  padding: clamp(20px, 3vw, 32px);
+  text-align: center;
+}
+.m-chart__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+.m-chart__sub {
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  color: var(--c-sub);
+  margin: 0 0 1.6rem;
+}
+.m-chart__canvas { width: 100%; }
+.m-chart__canvas svg { width: 100%; height: auto; }
+
+/* 長條 */
+.chart-bar { fill: var(--c-accent); transition: fill 0.25s; cursor: pointer; }
+.chart-bar:hover { fill: var(--c-brand-red); }
+.chart-bar--muted { fill: #b9b9b9; }
+.chart-bar--muted:hover { fill: #8f8f8f; }
+
+/* 座標與標籤 */
+.chart-axis  { stroke: var(--c-line); stroke-width: 1; }
+.chart-label { font-family: var(--font-sans); font-size: 12px; fill: var(--c-sub); }
+.chart-value { font-family: var(--font-sans); font-size: 12px; fill: var(--c-text); font-weight: 700; }
+
+/* 滑鼠提示框 */
+.chart-tip {
+  position: fixed;
+  z-index: 200;
+  padding: 7px 11px;
+  background: var(--c-dark);
+  color: var(--c-bg);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -130%);
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.chart-tip.is-on { opacity: 1; }
+
+.m-chart__source {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  color: var(--c-sub);
+  margin: 1.4rem 0 0;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   響應式：手機一律改為單欄堆疊，維持置中
+   -------------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  .m-pair__grid,
+  .m-trio__grid,
+  .m-grid__items,
+  .m-grid--3 .m-grid__items {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .m-trio__grid > :first-child { grid-row: auto; height: auto; }
+  .m-trio__grid > :first-child img { height: auto; }
+  .m-grid__items > img:last-child:nth-child(odd) { grid-column: auto; }
+}

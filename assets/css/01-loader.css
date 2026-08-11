@@ -1,0 +1,85 @@
+/* ==========================================================================
+   01-loader.css — 載入畫面
+   全部圖片／影片載完前覆蓋整個畫面，載完後淡出
+   ========================================================================== */
+
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--c-dark);
+  color: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4rem;
+  padding: var(--pad);
+  text-align: center;
+  transition: opacity 0.8s var(--ease), visibility 0.8s;
+}
+
+/* 載入完成後：淡出並停用互動 */
+#loader.is-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* --- 標題 --- */
+.loader__title {
+  font-size: clamp(1.4rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.6;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.loader__sub {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8b8992;
+  margin: 0;
+}
+
+/* --- 進度條 --- */
+.loader__bar {
+  width: min(320px, 70vw);
+  height: 2px;
+  background: rgba(240, 240, 240, 0.18);
+  overflow: hidden;
+}
+
+.loader__bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--c-brand-red);
+  transition: width 0.35s var(--ease);
+}
+
+/* --- 百分比數字 --- */
+.loader__pct {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  color: #8b8992;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 「進入報導」按鈕（AUTO_ENTER = false 時才會出現） --- */
+.loader__enter {
+  margin-top: 0.5rem;
+  padding: 0.85em 2.6em;
+  border: 1px solid var(--c-bg);
+  color: var(--c-bg);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.24em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s var(--ease), background 0.3s, color 0.3s;
+}
+.loader__enter.is-ready { opacity: 1; visibility: visible; }
+.loader__enter:hover { background: var(--c-bg); color: var(--c-dark); }

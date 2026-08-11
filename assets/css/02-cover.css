@@ -1,0 +1,68 @@
+/* ==========================================================================
+   02-cover.css — 封面（第一個版面）＋ 頂部閱讀進度條
+   封面只保留標題、副標與記者資訊；不放章節按鈕，也不放 SCROLL 提示
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   封面
+   -------------------------------------------------------------------------- */
+#cover {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;      /* svh：避開手機瀏覽器網址列造成的高度跳動 */
+  background: var(--c-dark);
+  color: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(60px, 10vh, 110px) 0;
+  overflow: hidden;
+}
+
+.cover__rule {
+  width: 46px;
+  height: 2px;
+  background: var(--c-bg);
+  opacity: 0.5;
+  margin-bottom: 2rem;
+}
+
+.cover__title {
+  font-size: var(--fs-hero);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.2em;
+}
+
+.cover__subtitle {
+  font-size: calc(var(--fs-hero) * 0.62);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 2.6rem;
+}
+
+.cover__meta {
+  color: #a9a7b0;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   頂部閱讀進度條
+   固定在瀏覽器最上緣，隨捲動由左往右增長
+   -------------------------------------------------------------------------- */
+#progress-bar {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 100;
+  width: 100%;
+  height: 3px;
+  background: rgba(27, 26, 32, 0.12);
+  pointer-events: none;
+}
+
+#progress-bar .bar__fill {
+  width: 0%;
+  height: 100%;
+  background: var(--c-brand-red);
+}
