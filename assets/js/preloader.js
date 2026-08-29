@@ -33,13 +33,16 @@
 
   /* ------------------------------------------------------------------------
      蒐集需要等待的資源
-     規則：頁面上所有 <img>（含影片劇照）。
+     · 頁面上所有 <img>（含影片劇照）
+     · 封面背景影片（只等到「可以開始播放」，不等整支下載完）
+     · 字體
      若某張圖不想納入載入計算，在該 <img> 加上 data-skip-preload 即可。
      ---------------------------------------------------------------------- */
-  const images = Array.from(document.querySelectorAll('img:not([data-skip-preload])'));
+  const images     = Array.from(document.querySelectorAll('img:not([data-skip-preload])'));
+  const coverVideo = document.getElementById('cover-video');
 
   let loadedCount = 0;
-  const totalCount = images.length + 1; // +1 是字體
+  const totalCount = images.length + 1 + (coverVideo ? 1 : 0); // +1 是字體
 
   function tick() {
     loadedCount++;
@@ -51,7 +54,8 @@
   function render(ratio) {
     const pct = Math.round(ratio * 100);
     if (barFill) barFill.style.width = pct + '%';
-    if (pctText) pctText.textContent = String(pct).padStart(3, '0') + '%';
+    // 兩位數以上直接顯示（85%、100%），個位數才補一個 0（05%）
+    if (pctText) pctText.textContent = String(pct).padStart(2, '0') + '%';
   }
 
   /* ------------------------------------------------------------------------
@@ -67,6 +71,29 @@
     img.addEventListener('load',  tick, { once: true });
     img.addEventListener('error', tick, { once: true });
   });
+
+  /* ------------------------------------------------------------------------
+     等待封面背景影片
+     只等到 canplay（緩衝到足以開始播放），不等整支影片下載完，
+     否則讀者要多等好幾秒。載入失敗時會保留 poster 靜圖，不影響閱讀。
+     ---------------------------------------------------------------------- */
+  if (coverVideo) {
+    if (coverVideo.readyState >= 3) {          // HAVE_FUTURE_DATA：已經可以播了
+      tick();
+    } else {
+      let videoDone = false;
+      const videoTick = function () {
+        if (videoDone) return;
+        videoDone = true;
+        tick();
+      };
+      coverVideo.addEventListener('canplay', videoTick);
+      coverVideo.addEventListener('error',   videoTick);
+      coverVideo.addEventListener('stalled', videoTick);
+      // 影片單獨的保險：8 秒還沒緩衝好就先放行，讓 poster 頂著
+      setTimeout(videoTick, 8000);
+    }
+  }
 
   /* ------------------------------------------------------------------------
      等待字體（Noto Serif TC 檔案較大，先載完再進場才不會跳版）
@@ -103,6 +130,13 @@
   function enter() {
     loader.classList.add('is-done');
     document.body.classList.remove('is-loading');
+
+    // 進場時確保封面影片開始播放（部分瀏覽器會在背景分頁暫停自動播放）
+    if (coverVideo && coverVideo.paused) {
+      const p = coverVideo.play();
+      if (p && p.catch) p.catch(function () { /* 被瀏覽器擋下時保留 poster 靜圖 */ });
+    }
+
     // 通知其他模組：報導已開始（navigation.js 會據此啟動進場動畫）
     document.dispatchEvent(new CustomEvent('report:ready'));
   }

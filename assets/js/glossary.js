@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const GLOSSARY_SRC = 'data/glossary.json';
+  const GLOSSARY_SRC = 'data/glossary.json?v=2';   // 改 JSON 內容時把版本號 +1，瀏覽器才會重新抓
   const terms = document.querySelectorAll('.term[data-term]');
   if (!terms.length) return;
 

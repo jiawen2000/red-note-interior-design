@@ -1,0 +1,78 @@
+/* ==========================================================================
+   08-toc.css — 左側小標目錄
+
+   目錄由 assets/js/toc.js 依內文的 <h3 class="h3" id="..."> 自動生成，
+   小標改了不用另外維護目錄。
+
+   顯示條件：畫面夠寬（≥1320px）才顯示；讀者停在封面或三段滿版影片時自動隱藏。
+   ========================================================================== */
+
+#toc {
+  position: fixed;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  width: 180px;
+  max-height: 76vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s var(--ease), visibility 0.5s;
+}
+#toc.is-on { opacity: 1; visibility: visible; }
+
+/* 捲軸不搶視覺 */
+#toc::-webkit-scrollbar { width: 0; }
+#toc { scrollbar-width: none; }
+
+.toc__title {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  letter-spacing: 0.28em;
+  color: var(--c-sub);
+  margin: 0 0 14px 10px;
+  opacity: 0.7;
+}
+
+.toc__list { list-style: none; margin: 0; padding: 0; }
+
+.toc__link {
+  display: flex;
+  gap: 8px;
+  padding: 7px 8px 7px 10px;
+  border-left: 2px solid var(--c-line);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--c-sub);
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
+}
+.toc__link:hover { color: var(--c-text); background: rgba(0, 0, 0, 0.035); }
+
+.toc__num {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+
+/* 目前所在的小標 */
+.toc__link.is-active {
+  color: var(--c-accent);
+  border-left-color: var(--c-accent);
+  font-weight: 500;
+}
+.toc__link.is-active .toc__num { opacity: 1; }
+
+/* --------------------------------------------------------------------------
+   版面不夠寬就不顯示：內文最寬 900px，兩側各留約 210px 才放得下
+   -------------------------------------------------------------------------- */
+@media (max-width: 1319px) {
+  #toc { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #toc { transition-duration: 0.01ms; }
+}

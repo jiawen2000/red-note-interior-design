@@ -19,7 +19,7 @@
   margin: clamp(40px, 7vh, 72px) auto;
 }
 
-/* 圖說 —— 與照片一起置中 */
+/* 圖說 —— 靠左對齊，左緣與照片切齊 */
 .caption {
   font-family: var(--font-sans);
   font-size: var(--fs-small);
@@ -27,7 +27,7 @@
   color: var(--c-sub);
   margin-top: 12px;
   letter-spacing: 0.04em;
-  text-align: center;
+  text-align: left;
 }
 
 /* 照片群組共用：整組置中 */
@@ -53,15 +53,14 @@
 .m-pair__grid img { width: 100%; }
 
 /* --------------------------------------------------------------------------
-   3. 三張組合：左邊一張大圖，右邊兩張小圖
+   3. 三張組合：上方一張大圖，下方兩張並排
+      舊版是「左大右二」，但左邊那張為了對齊右側兩張的總高度，
+      必須用 object-fit: cover 裁切，照片會被壓縮。
+      改成上下排列後，三張都維持原始比例，不會被裁切或變形。
    -------------------------------------------------------------------------- */
-.m-trio__grid {
-  grid-template-columns: 1.5fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-.m-trio__grid img { width: 100%; }
-.m-trio__grid > :first-child { grid-row: span 2; height: 100%; }
-.m-trio__grid > :first-child img { height: 100%; object-fit: cover; }
+.m-trio__grid { grid-template-columns: 1fr 1fr; }
+.m-trio__grid img { width: 100%; height: auto; }
+.m-trio__grid > :first-child { grid-column: 1 / -1; }
 
 /* --------------------------------------------------------------------------
    4. 多張照片網格（四張以上）
@@ -155,36 +154,189 @@
   margin: 0 0 1.6rem;
 }
 .m-chart__canvas { width: 100%; }
-.m-chart__canvas svg { width: 100%; height: auto; }
+.m-chart__canvas svg { width: 100%; height: auto; display: block; }
 
-/* 長條 */
+/* --- 座標、格線與標籤（三種圖表共用） --- */
+.chart-axis  { stroke: var(--c-line); stroke-width: 1; }
+.chart-grid  { stroke: var(--c-line); stroke-width: 1; opacity: 0.55; }
+.chart-label { font-family: var(--font-sans); font-size: 12px; fill: var(--c-sub); }
+.chart-label--dim { opacity: 0.6; }
+.chart-value { font-family: var(--font-sans); font-size: 12px; fill: var(--c-text); font-weight: 700; }
+
+/* --- 長條圖 --- */
 .chart-bar { fill: var(--c-accent); transition: fill 0.25s; cursor: pointer; }
 .chart-bar:hover { fill: var(--c-brand-red); }
 .chart-bar--muted { fill: #b9b9b9; }
 .chart-bar--muted:hover { fill: #8f8f8f; }
 
-/* 座標與標籤 */
-.chart-axis  { stroke: var(--c-line); stroke-width: 1; }
-.chart-label { font-family: var(--font-sans); font-size: 12px; fill: var(--c-sub); }
-.chart-value { font-family: var(--font-sans); font-size: 12px; fill: var(--c-text); font-weight: 700; }
+/* --- 折線圖 --- */
+.chart-line {
+  fill: none;
+  stroke: var(--c-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
 
-/* 滑鼠提示框 */
+/* 滑鼠十字線 */
+.chart-hover-line { stroke: var(--c-dark); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+.chart-hover-dot  { fill: var(--c-dark); }
+
+/* 線性趨勢線（統計上的整體走向） */
+.chart-trend {
+  stroke: var(--c-dark);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  opacity: 0.5;
+}
+
+/* 關鍵事件標記：清晰醒目的紅點，外圈輕微脈動提示可以互動 */
+.chart-note-line { stroke: var(--c-accent); stroke-width: 1; stroke-dasharray: 2 4; opacity: 0.45; }
+.chart-note { cursor: pointer; }
+/* 放大的透明感應區，讓事件點好點也好滑到 */
+.chart-note-hit { fill: transparent; }
+.chart-note-ring {
+  fill: none;
+  stroke: var(--c-brand-red);
+  stroke-width: 1.5;
+  opacity: 0.55;
+  transition: opacity 0.25s;
+}
+.chart-note-pulse {
+  fill: var(--c-brand-red);
+  opacity: 0.18;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: note-pulse 2.6s ease-out infinite;
+}
+@keyframes note-pulse {
+  0%   { transform: scale(0.7); opacity: 0.30; }
+  70%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.chart-note-dot { fill: var(--c-brand-red); stroke: var(--c-paper); stroke-width: 2.5; }
+.chart-note:hover .chart-note-ring,
+.chart-note.is-active .chart-note-ring,
+.chart-note:focus-visible .chart-note-ring { opacity: 1; stroke-width: 2.5; }
+.chart-note:focus-visible { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-note-pulse { animation: none; opacity: 0.22; }
+}
+
+/* --- 堆疊長條圖 --- */
+.chart-seg { cursor: pointer; transition: opacity 0.2s; }
+.chart-seg:hover { opacity: 0.78; }
+.chart-seg--partial { opacity: 0.55; }
+.chart-seg--partial:hover { opacity: 0.4; }
+
+/* 可點擊的圖例 */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin-bottom: 20px;
+}
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--c-text);
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid transparent;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.chart-legend__item:hover { border-bottom-color: var(--c-line); }
+.chart-legend__item.is-off { opacity: 0.35; }
+.chart-legend__dot { width: 11px; height: 11px; flex-shrink: 0; }
+
+/* 靜態圖例（折線圖用，不可點擊） */
+.chart-legend--static .chart-legend__item { cursor: default; }
+.chart-legend--static .chart-legend__item:hover { border-bottom-color: transparent; }
+.chart-legend__line {
+  width: 22px;
+  height: 0;
+  flex-shrink: 0;
+  border-top: 2px solid var(--c-accent);
+}
+.chart-legend__line--dash {
+  border-top: 2px dashed var(--c-dark);
+  opacity: 0.55;
+}
+
+/* --- 圖表下方的說明與資料來源 ---
+   靠左對齊，左緣由 --axis 對齊圖表的 Y 軸位置（由 charts.js 依 viewBox 算出） */
+.chart-foot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--c-line);
+  text-align: left;
+}
+.chart-foot__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 var(--axis, 0);
+}
+.chart-foot__list li {
+  position: relative;
+  padding-left: 1.1em;
+  margin-bottom: 0.5em;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.85;
+  color: var(--c-sub);
+  letter-spacing: 0.02em;
+}
+.chart-foot__list li:last-child { margin-bottom: 0; }
+.chart-foot__list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--c-accent);
+}
+/* 資料解讀提醒：稍微強調，但仍是同一組 bullet */
+.chart-foot__note { color: var(--c-text) !important; font-weight: 500; }
+.chart-foot__source { font-size: 0.6875rem !important; opacity: 0.85; }
+
+/* --- 滑鼠提示框 --- */
 .chart-tip {
   position: fixed;
   z-index: 200;
-  padding: 7px 11px;
+  padding: 8px 12px;
   background: var(--c-dark);
   color: var(--c-bg);
   font-family: var(--font-sans);
   font-size: 0.75rem;
+  line-height: 1.6;
   letter-spacing: 0.04em;
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, -130%);
   transition: opacity 0.15s;
   white-space: nowrap;
+  text-align: left;
 }
 .chart-tip.is-on { opacity: 1; }
+
+/* 顯示高點事件說明時改為可換行的寬版 */
+.chart-tip--wide {
+  white-space: normal;
+  width: min(280px, 70vw);
+  line-height: 1.75;
+}
+.chart-tip__tag {
+  display: inline-block;
+  margin: 6px 6px 3px 0;
+  padding: 2px 7px;
+  background: var(--c-brand-red);
+  color: #fff;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+}
 
 .m-chart__source {
   font-family: var(--font-sans);
@@ -208,4 +360,16 @@
   .m-trio__grid > :first-child { grid-row: auto; height: auto; }
   .m-trio__grid > :first-child img { height: auto; }
   .m-grid__items > img:last-child:nth-child(odd) { grid-column: auto; }
+}
+
+/* 小螢幕的圖表：維持可讀比例，改為在圖表框內左右滑動
+   （捲動只發生在圖表區塊內，整個頁面仍然不會左右移動） */
+@media (max-width: 640px) {
+  .m-chart__canvas {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .m-chart__canvas svg { min-width: 580px; }
+  .chart-foot__list li:first-child::after { content: "　（圖表可左右滑動）"; }
+  .chart-legend { justify-content: flex-start; }
 }

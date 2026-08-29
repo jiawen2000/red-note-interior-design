@@ -26,13 +26,16 @@
   pointer-events: none;
 }
 
-/* --- 標題 --- */
+/* --- 標題 ---
+   單行呈現，字級為原本的 80%（2.4rem → 1.92rem）。
+   中間的 4.6vw 讓窄螢幕自動縮小，17 個字仍排得下一行不會折行。 */
 .loader__title {
-  font-size: clamp(1.4rem, 4.5vw, 2.4rem);
+  font-size: clamp(0.95rem, 4.6vw, 1.92rem);
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
 }
 
 .loader__sub {
