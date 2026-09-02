@@ -37,6 +37,13 @@
    ========================================================================== */
 #cover-scroll {
   --hero-scroll: 220vh;   /* ← 想讓封面停久一點就加大 */
+
+  /* 光學對齊補償：
+     大字級的中文字在字框內本來就留有邊距，標題的視覺左緣會比容器邊界稍微往右；
+     小字的邊距按比例小很多，貼齊容器就會看起來凸出去。
+     這個值把細線、記者資訊、閱讀提示往右推一點，讓視覺左緣對齊標題。
+     覺得還是沒對齊就微調這個數字（想更靠右就加大）。 */
+  --cover-optical: clamp(3px, 0.4vw, 7px);
   position: relative;
   height: var(--hero-scroll);
 }
@@ -94,10 +101,45 @@
   will-change: opacity, transform;
 }
 
-.cover__rule { width: 46px; height: 2px; background: var(--c-bg); opacity: 0.5; margin-bottom: 2rem; }
+.cover__rule {
+  width: 46px; height: 2px;
+  background: var(--c-bg);
+  opacity: 0.5;
+  margin: 0 0 2rem var(--cover-optical);
+}
 .cover__title    { font-size: var(--fs-hero); font-weight: 700; line-height: 1.22; letter-spacing: 0.02em; margin: 0 0 0.2em; }
 .cover__subtitle { font-size: calc(var(--fs-hero) * 0.62); font-weight: 700; line-height: 1.3; margin: 0 0 2.6rem; }
-.cover__meta     { color: #a9a7b0; margin: 0; }
+.cover__meta {
+  color: #a9a7b0;
+  margin: 0;
+  padding-left: var(--cover-optical);
+}
+
+/* --- 封面的閱讀提示 --- */
+.cover__note {
+  max-width: 34em;
+  margin: clamp(20px, 3.5vh, 34px) 0 0 var(--cover-optical);
+  padding-top: clamp(14px, 2vh, 20px);
+  border-top: 1px solid rgba(240, 240, 240, 0.18);
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  line-height: 1.95;
+  letter-spacing: 0.04em;
+  color: #a9a7b0;
+}
+.cover__note-label {
+  color: var(--c-bg);
+  letter-spacing: 0.16em;
+}
+/* 用細線當作「｜」，比直接打全形直線乾淨 */
+.cover__note-label::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.85em;
+  margin: 0 0.7em -0.1em;
+  background: rgba(240, 240, 240, 0.35);
+}
 
 /* --- 右上角的聲音開關 --- */
 .cover__sound {
@@ -282,6 +324,13 @@
 /* --------------------------------------------------------------------------
    響應式
    -------------------------------------------------------------------------- */
+/* 畫面比 3:2 更窄時（手機直式、窄視窗），影片改為完整顯示不裁切。
+   scrub 那支影片畫面上有文字，用 object-fit: cover 會把兩側切掉看不到；
+   改成 contain 之後上下會露出舞台的深色底，但內容完整。 */
+@media (max-aspect-ratio: 3/2) {
+  .m-scrub .stage__video { object-fit: contain; }
+}
+
 @media (max-width: 700px) {
   #cover-scroll { --hero-scroll: 200vh; }
   .m-immersive  { --immersive-scroll: 220vh; }

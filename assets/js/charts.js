@@ -55,21 +55,27 @@
   /* 圖例、提示與說明面板放在畫布外層，才不會跟著小螢幕的橫向捲動一起移動 */
   function shell(box) { return box.parentNode || box; }
 
-  /* 圖表下方的說明與資料來源
-     以 bullet 呈現、靠左對齊，左緣對齊圖表的 Y 軸（axisRatio = PAD.left / viewBox 寬） */
-  function footer(box, data, axisRatio) {
+  /* 圖例下方的操作說明：每則一行，前面加星號 */
+  function hintLines(data) {
+    const hints = data.hints || [];
+    if (!hints.length) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-hint-lines';
+    hints.forEach(function (h) {
+      const p = document.createElement('p');
+      p.textContent = '*' + h;
+      wrap.appendChild(p);
+    });
+    return wrap;
+  }
+
+  /* 圖表下方的資料來源與備註：bullet、靠左，左緣與標題切齊 */
+  function footer(box, data) {
     const foot = document.createElement('div');
     foot.className = 'chart-foot';
-    foot.style.setProperty('--axis', (axisRatio * 100).toFixed(2) + '%');
 
     const ul = document.createElement('ul');
     ul.className = 'chart-foot__list';
-
-    (data.hints || []).forEach(function (h) {
-      const li = document.createElement('li');
-      li.textContent = h;
-      ul.appendChild(li);
-    });
     if (data.note) {
       const li = document.createElement('li');
       li.className = 'chart-foot__note';
@@ -153,12 +159,15 @@
     /* ====================================================================
        2. 折線圖（含事件標註）
        ==================================================================== */
-    line: function (box, data) {
+    line: function (box, data, narrow) {
       const pts = data.series || [];
       if (!pts.length) return;
 
-      const W = 920, H = 360;
-      const PAD = { top: 30, right: 18, bottom: 42, left: 38 };
+      // 窄畫面用比較窄、比較高的畫布，縮到手機寬度後字才不會太小
+      const W = narrow ? 520 : 920;
+      const H = narrow ? 400 : 360;
+      const PAD = narrow ? { top: 34, right: 14, bottom: 46, left: 44 }
+                         : { top: 30, right: 18, bottom: 42, left: 38 };
       const innerW = W - PAD.left - PAD.right;
       const innerH = H - PAD.top - PAD.bottom;
       const maxV = Math.max(100, Math.max.apply(null, pts.map(function (p) { return p.v; })));
@@ -167,6 +176,7 @@
       const Y = function (v) { return PAD.top + innerH - (Math.max(v, 0) / maxV) * innerH; };
 
       const svg = svgRoot(W, H, data.title);
+      if (narrow) svg.classList.add('is-narrow');
       box.appendChild(svg);   // 先掛進頁面，getTotalLength() 才量得到長度
 
       /* --- 漸層（線下方的填色） --- */
@@ -190,12 +200,13 @@
           data.axisUnit));
       }
 
-      /* --- X 軸年份標籤（每兩年一個） --- */
+      /* --- X 軸年份標籤（寬版每兩年、窄版每四年，避免擠在一起） --- */
+      const yearStep = narrow ? 4 : 2;
       pts.forEach(function (p, i) {
         const parts = p.t.split('-');
         if (parts[1] !== '01') return;
         const year = parseInt(parts[0], 10);
-        if (year % 2 !== 0) return;
+        if (year % yearStep !== 0) return;
         svg.appendChild(el('text', {
           class: 'chart-label', x: X(i), y: PAD.top + innerH + 22, 'text-anchor': 'middle'
         }, String(year)));
@@ -343,6 +354,8 @@
           (data.trend.label || '線性趨勢') + '</span>';
         outer.insertBefore(lg, box);
       }
+      const lineHint = hintLines(data);
+      if (lineHint) outer.insertBefore(lineHint, box);
 
       if (data.explain) {
         const ex = document.createElement('div');
@@ -355,26 +368,29 @@
         put(ex);
       }
 
-      put(footer(box, data, PAD.left / W));
+      put(footer(box, data));
     },
 
     /* ====================================================================
        3. 堆疊長條圖（圖例可點擊開關類別）
        ==================================================================== */
-    stackedBar: function (box, data) {
+    stackedBar: function (box, data, narrow) {
       const cats  = data.categories || [];
       const items = data.items || [];
       if (!cats.length || !items.length) return;
 
       const off = {};   // 被關掉的類別
-      const W = 920, H = 400;
-      const PAD = { top: 34, right: 18, bottom: 58, left: 46 };
+      const W = narrow ? 520 : 920;
+      const H = narrow ? 430 : 400;
+      const PAD = narrow ? { top: 40, right: 12, bottom: 64, left: 52 }
+                         : { top: 34, right: 18, bottom: 58, left: 46 };
       const innerW = W - PAD.left - PAD.right;
       const innerH = H - PAD.top - PAD.bottom;
       const slot = innerW / items.length;
       const barW = Math.min(slot * 0.6, 56);
 
       const svg = svgRoot(W, H, data.title);
+      if (narrow) svg.classList.add('is-narrow');
       box.appendChild(svg);
 
       function totalOf(item) {
@@ -439,22 +455,28 @@
             rect.addEventListener('mouseleave', hideTip);
           });
 
-          // 每年總計
+          // 每年總計（窄版只標首尾與最高的一年，其餘省略避免重疊）
           const tot = totalOf(item);
-          svg.appendChild(el('text', {
-            class: 'chart-value', x: x + barW / 2, y: Y(tot) - 9, 'text-anchor': 'middle'
-          }, tot.toFixed(0)));
-
-          // X 軸標籤
-          svg.appendChild(el('text', {
-            class: 'chart-label' + (item.partial ? ' chart-label--dim' : ''),
-            x: x + barW / 2, y: PAD.top + innerH + 22, 'text-anchor': 'middle'
-          }, item.label));
-          if (item.sublabel) {
+          const showTotal = !narrow || i === 0 || i === items.length - 1 ||
+                            tot === Math.max.apply(null, items.map(totalOf));
+          if (showTotal) {
             svg.appendChild(el('text', {
-              class: 'chart-label chart-label--dim',
-              x: x + barW / 2, y: PAD.top + innerH + 38, 'text-anchor': 'middle'
-            }, item.sublabel));
+              class: 'chart-value', x: x + barW / 2, y: Y(tot) - 9, 'text-anchor': 'middle'
+            }, tot.toFixed(0)));
+          }
+
+          // X 軸標籤（窄版隔一個顯示）
+          if (!narrow || i % 2 === 0 || i === items.length - 1) {
+            svg.appendChild(el('text', {
+              class: 'chart-label' + (item.partial ? ' chart-label--dim' : ''),
+              x: x + barW / 2, y: PAD.top + innerH + 24, 'text-anchor': 'middle'
+            }, item.label));
+            if (item.sublabel) {
+              svg.appendChild(el('text', {
+                class: 'chart-label chart-label--dim',
+                x: x + barW / 2, y: PAD.top + innerH + 42, 'text-anchor': 'middle'
+              }, item.sublabel));
+            }
           }
         });
 
@@ -497,8 +519,10 @@
       });
       const outer = shell(box);
       outer.insertBefore(legend, box);
+      const barHint = hintLines(data);
+      if (barHint) outer.insertBefore(barHint, box);
 
-      outer.insertBefore(footer(box, data, PAD.left / W), box.nextSibling);
+      outer.insertBefore(footer(box, data), box.nextSibling);
 
       draw(true);
     }
@@ -510,6 +534,46 @@
   const canvases = document.querySelectorAll('.m-chart__canvas[data-src]');
   if (!canvases.length) return;
 
+  const NARROW_AT = 560;   // 容器窄於這個寬度就改用窄版畫布
+
+  /* SVG 會等比縮放，所以 viewBox 裡寫死的字級在小螢幕上會跟著縮、在窄版畫布上又會放大。
+     這裡反過來算：先決定「螢幕上想看到幾 px」，再換算成 viewBox 裡該用的數字。 */
+  const FONT = { label: 10, value: 11 };   // 實際顯示的像素大小
+
+  function fitFonts(box) {
+    const svg = box.querySelector('svg');
+    if (!svg) return;
+    const vb = svg.viewBox && svg.viewBox.baseVal;
+    const shown = svg.clientWidth || svg.getBoundingClientRect().width;
+    if (!vb || !vb.width || !shown) return;
+    const k = vb.width / shown;            // viewBox 單位 ÷ 螢幕像素
+    svg.style.setProperty('--label-fs', (FONT.label * k).toFixed(2) + 'px');
+    svg.style.setProperty('--value-fs', (FONT.value * k).toFixed(2) + 'px');
+  }
+
+  function isNarrow(box) {
+    const w = box.clientWidth || (box.parentNode && box.parentNode.clientWidth) || window.innerWidth;
+    return w < NARROW_AT;
+  }
+
+  /* 依目前寬度把圖畫出來。重畫前要清掉上一次產生的圖例、說明與資料來源，
+     否則每次重畫都會多疊一份。 */
+  function paint(box, data) {
+    const outer = shell(box);
+    Array.prototype.forEach.call(
+      outer.querySelectorAll('.chart-legend, .chart-hint-lines, .chart-foot, .chart-explain, .chart-panel'),
+      function (n) { if (n.parentNode) n.parentNode.removeChild(n); }
+    );
+    box.innerHTML = '';
+
+    const render = RENDERERS[data.type];
+    if (!render) { box.innerHTML = '<p class="meta">尚未支援的圖表類型：' + data.type + '</p>'; return; }
+    box._narrow = isNarrow(box);
+    render(box, data, box._narrow);
+    fitFonts(box);
+    requestAnimationFrame(function () { fitFonts(box); });   // 版面穩定後再算一次
+  }
+
   function drawChart(box) {
     if (box.dataset.drawn) return;
     box.dataset.drawn = '1';
@@ -520,15 +584,28 @@
         return res.json();
       })
       .then(function (data) {
-        const render = RENDERERS[data.type];
-        if (!render) throw new Error('尚未支援的圖表類型：' + data.type);
-        render(box, data);
+        box._data = data;
+        paint(box, data);
       })
       .catch(function (err) {
         // 圖表載入失敗不影響報導閱讀，只在該區塊顯示訊息
         box.innerHTML = '<p class="meta">圖表載入失敗（' + err.message + '）</p>';
       });
   }
+
+  /* 視窗寬度跨過門檻時重畫（例如轉直橫向、縮放視窗） */
+  let resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      Array.prototype.forEach.call(canvases, function (box) {
+        if (!box._data) return;
+        // 跨過窄版門檻才整張重畫；否則只要重算字級就好
+        if (isNarrow(box) !== box._narrow) paint(box, box._data);
+        else fitFonts(box);
+      });
+    }, 250);
+  });
 
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(function (entries) {

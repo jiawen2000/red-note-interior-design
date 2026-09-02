@@ -131,6 +131,10 @@
     loader.classList.add('is-done');
     document.body.classList.remove('is-loading');
 
+    // 載入期間 body 是鎖住的，解鎖的瞬間有些瀏覽器會把捲動位置還原回去，
+    // 這裡再歸零一次（網址帶錨點時不動，保留跳轉行為）
+    if (!location.hash) window.scrollTo(0, 0);
+
     // 進場時確保封面影片開始播放（部分瀏覽器會在背景分頁暫停自動播放）
     if (coverVideo && coverVideo.paused) {
       const p = coverVideo.play();

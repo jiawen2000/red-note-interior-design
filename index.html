@@ -6,6 +6,13 @@
 <title>你的家，誰的想像？小紅書的居家設計</title>
 <meta name="description" content="從佛山的沙發工廠、小紅書的演算法，到台灣住宅的日常空間——一場正在發生卻難以被察覺的產業板塊位移。">
 <meta name="author" content="林佳玟">
+<!-- 重新整理時一律從頭開始，不沿用上次的閱讀位置。
+     這段必須放在 head 最前面：等到 body 末端的 script 才設定就來不及了。
+     網址帶錨點（例如 #s-05）時則保留跳轉行為。 -->
+<script>
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  if (!location.hash) window.scrollTo(0, 0);
+</script>
 
 <!-- 社群分享預覽（GitHub Pages 上線後，請把 og:image 換成完整網址） -->
 <meta property="og:type" content="article">
@@ -13,8 +20,10 @@
 <meta property="og:site_name" content="國立臺灣大學新聞研究所　多媒體深度報導">
 <meta property="og:title" content="你的家，誰的想像？小紅書的居家設計">
 <meta property="og:description" content="滑開小紅書，家就有了樣子；打開淘寶，家就能被買下來。當理想生活可以複製貼上，我們住的到底是誰的想像？">
-<meta property="og:image" content="assets/img/fig-04-longjiang-factory.jpg">
-<meta property="og:image:alt" content="中國廣東省佛山市龍江鎮一帶的家具工廠">
+<meta property="og:image" content="assets/img/og-image.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="呂映昇位於台北的租屋處">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231B1A20'/><rect x='30' y='30' width='40' height='40' fill='%23FE231D'/></svg>">
@@ -25,15 +34,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
 
 <!-- 樣式表（依序載入，順序不要調換） -->
-<link rel="stylesheet" href="assets/css/00-base.css?v=32">
-<link rel="stylesheet" href="assets/css/01-loader.css?v=32">
-<link rel="stylesheet" href="assets/css/02-cover.css?v=32">
-<link rel="stylesheet" href="assets/css/03-article.css?v=32">
-<link rel="stylesheet" href="assets/css/04-media.css?v=32">
-<link rel="stylesheet" href="assets/css/05-footer.css?v=32">
-<link rel="stylesheet" href="assets/css/06-glossary.css?v=32">
-<link rel="stylesheet" href="assets/css/07-video-scroll.css?v=32">
-<link rel="stylesheet" href="assets/css/08-toc.css?v=32">
+<link rel="stylesheet" href="assets/css/00-base.css?v=63">
+<link rel="stylesheet" href="assets/css/01-loader.css?v=63">
+<link rel="stylesheet" href="assets/css/02-cover.css?v=63">
+<link rel="stylesheet" href="assets/css/03-article.css?v=63">
+<link rel="stylesheet" href="assets/css/04-media.css?v=63">
+<link rel="stylesheet" href="assets/css/05-footer.css?v=63">
+<link rel="stylesheet" href="assets/css/06-glossary.css?v=63">
+<link rel="stylesheet" href="assets/css/07-video-scroll.css?v=63">
+<link rel="stylesheet" href="assets/css/08-toc.css?v=63">
+<link rel="stylesheet" href="assets/css/09-term-hint.css?v=63">
 </head>
 
 <body class="is-loading">
@@ -87,7 +97,12 @@
       <p class="cover__subtitle"><span class="brand">小紅書</span>的居家設計</p>
       <p class="cover__meta meta">
         製作：林佳玟<br>
-        發布日期：2026-08-01
+        發布日期：2026-09-17
+      </p>
+
+      <p class="cover__note">
+        <span class="cover__note-label">閱讀提示</span>
+        本篇為多媒體深度報導，建議使用電腦或平板，<br>開啟右上角聲音按鈕，窩在舒服的角落，享受完整閱讀體驗。
       </p>
     </div>
 
@@ -186,8 +201,8 @@
     <section class="m-scrub" aria-label="呂映昇的家">
       <div class="stage">
         <video class="stage__video"
-               src="assets/video/table.mp4?v=6"
-               poster="assets/img/table-poster.jpg?v=6"
+               src="assets/video/table.mp4?v=7"
+               poster="assets/img/table-poster.jpg?v=7"
                muted playsinline preload="auto"></video>
         <div class="m-scrub__scrim" aria-hidden="true"></div>
         <p class="m-scrub__loading">LOADING</p>
@@ -236,9 +251,9 @@
     <!-- 【模組：互動圖表】標題、說明與資料來源都寫在 data/chart-google-trends.json 裡 -->
     <figure class="m-chart wrap-media reveal">
       <div class="m-chart__box">
-        <h4 class="m-chart__title">「淘寶家具」Google 搜尋量 2025 年底來到高峰</h4>
+        <h4 class="m-chart__title">淘寶家具 Google 搜尋量，2025 年底來到高峰</h4>
         <p class="m-chart__sub">台灣地區 2010 年至 2026 年的 Google 搜尋熱度變化</p>
-        <div class="m-chart__canvas" data-src="data/chart-google-trends.json?v=6"></div>
+        <div class="m-chart__canvas" data-src="data/chart-google-trends.json?v=9"></div>
       </div>
     </figure>
 
@@ -267,7 +282,7 @@
         <img src="assets/img/fig-03c-factory-export.jpg?v=4" alt="佛山家具工廠生產與外銷 3">
         <img src="assets/img/fig-03d-factory-export.jpg?v=4" alt="佛山家具工廠生產與外銷 4">
       </div>
-      <figcaption class="caption">△ 中國廣東省家具工廠生產的產品不僅供應內需市場，還銷售到海外。楊曜的工廠也承接過台灣多家知名連鎖餐廳、旅館及建設公司的活動家具與軟裝項目。</figcaption>
+      <figcaption class="caption">△ 楊曜形容這裡是「一個產業養活全村」。噴漆、裁切、捫皮組裝等步驟，工廠裡的每一道工序背後都是一個人、一個家庭的生計。</figcaption>
     </figure>
 
     <div class="wrap-text reveal">
@@ -414,9 +429,9 @@
     <!-- 【模組：互動圖表】標題、說明與資料來源都寫在 data/chart-customs-furniture.json 裡 -->
     <figure class="m-chart wrap-media reveal">
       <div class="m-chart__box">
-        <h4 class="m-chart__title">中國進口到台灣的家具中　以具有明顯價差的櫃、桌、床架為大宗</h4>
+        <h4 class="m-chart__title">中國進口到台灣的家具中，<br>以具有明顯價差的櫃、桌、床架為大宗</h4>
         <p class="m-chart__sub">2015 年到 2026 年中國進口至台灣的家具金額</p>
-        <div class="m-chart__canvas" data-src="data/chart-customs-furniture.json?v=6"></div>
+        <div class="m-chart__canvas" data-src="data/chart-customs-furniture.json?v=9"></div>
       </div>
     </figure>
 
@@ -516,13 +531,14 @@
 
 
 <!-- 腳本 -->
-<script src="assets/js/preloader.js?v=32"></script>
-<script src="assets/js/navigation.js?v=32"></script>
-<script src="assets/js/scroll-fx.js?v=32"></script>
-<script src="assets/js/media.js?v=32"></script>
-<script src="assets/js/charts.js?v=32"></script>
-<script src="assets/js/glossary.js?v=32"></script>
-<script src="assets/js/toc.js?v=32"></script>
+<script src="assets/js/preloader.js?v=63"></script>
+<script src="assets/js/navigation.js?v=63"></script>
+<script src="assets/js/scroll-fx.js?v=63"></script>
+<script src="assets/js/media.js?v=63"></script>
+<script src="assets/js/charts.js?v=63"></script>
+<script src="assets/js/glossary.js?v=63"></script>
+<script src="assets/js/toc.js?v=63"></script>
+<script src="assets/js/term-hint.js?v=63"></script>
 
 </body>
 </html>

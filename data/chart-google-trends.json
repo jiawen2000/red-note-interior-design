@@ -1,10 +1,10 @@
 {
  "_說明": "Google Trends「淘寶家具」台灣地區搜尋熱度，2010-01～2026-08。關鍵事件標註另存於 chart-google-trends-annotations.json。",
  "type": "line",
- "title": "「淘寶家具」Google 搜尋量 2025 年底來到高峰",
+ "title": "淘寶家具 Google 搜尋量，2025 年底來到高峰",
  "subtitle": "台灣地區 2010 年至 2026 年的 Google 搜尋熱度變化",
  "yLabel": "相對熱度",
- "axisUnit": "熱度",
+ "axisUnit": "相對熱度",
  "series": [
   {
    "t": "2010-01-01",
@@ -816,7 +816,7 @@
  },
  "annotationsSrc": "data/chart-google-trends-annotations.json?v=4",
  "hints": [
-  "滑鼠移至折線或紅點，可查看每月搜尋熱度及關鍵事件與成因判讀。"
+  "滑鼠移至折線或紅點，可查看每月搜尋熱度及關鍵事件與成因判讀"
  ],
  "source": "資料來源：Google Trends，搜尋詞「淘寶家具」，地區為台灣，2010/01–2026/08。數值為相對熱度指數（0–100），100 代表期間內最高點，並非絕對搜尋次數。"
 }

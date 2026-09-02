@@ -140,18 +140,21 @@
   background: var(--c-paper);
   border: 1px solid var(--c-line);
   padding: clamp(20px, 3vw, 32px);
-  text-align: center;
+  text-align: left;
 }
 .m-chart__title {
   font-size: 1.05rem;
   font-weight: 700;
-  margin: 0 0 0.35rem;
+  line-height: 1.55;
+  margin: 0 0 0.4rem;
+  text-align: left;
 }
 .m-chart__sub {
   font-family: var(--font-sans);
   font-size: var(--fs-small);
   color: var(--c-sub);
   margin: 0 0 1.6rem;
+  text-align: left;
 }
 .m-chart__canvas { width: 100%; }
 .m-chart__canvas svg { width: 100%; height: auto; display: block; }
@@ -159,9 +162,10 @@
 /* --- 座標、格線與標籤（三種圖表共用） --- */
 .chart-axis  { stroke: var(--c-line); stroke-width: 1; }
 .chart-grid  { stroke: var(--c-line); stroke-width: 1; opacity: 0.55; }
-.chart-label { font-family: var(--font-sans); font-size: 12px; fill: var(--c-sub); }
+/* 字級由 charts.js 依 SVG 實際縮放比例換算，讓不同螢幕上「看起來」都一樣大 */
+.chart-label { font-family: var(--font-sans); font-size: var(--label-fs, 12px); fill: var(--c-sub); }
 .chart-label--dim { opacity: 0.6; }
-.chart-value { font-family: var(--font-sans); font-size: 12px; fill: var(--c-text); font-weight: 700; }
+.chart-value { font-family: var(--font-sans); font-size: var(--value-fs, 12px); fill: var(--c-text); font-weight: 700; }
 
 /* --- 長條圖 --- */
 .chart-bar { fill: var(--c-accent); transition: fill 0.25s; cursor: pointer; }
@@ -230,11 +234,11 @@
 .chart-seg--partial { opacity: 0.55; }
 .chart-seg--partial:hover { opacity: 0.4; }
 
-/* 可點擊的圖例 */
+/* 可點擊的圖例（靠左，與標題、說明同一條左緣） */
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px 18px;
   margin-bottom: 20px;
 }
@@ -247,16 +251,16 @@
   font-size: 0.75rem;
   color: var(--c-text);
   letter-spacing: 0.03em;
-  border-bottom: 1px solid transparent;
-  transition: opacity 0.2s, border-color 0.2s;
+  transition: opacity 0.2s, color 0.2s;
 }
-.chart-legend__item:hover { border-bottom-color: var(--c-line); }
+/* 滑過時只用顏色回饋，不畫底線 */
+.chart-legend__item:hover { color: var(--c-accent); }
 .chart-legend__item.is-off { opacity: 0.35; }
 .chart-legend__dot { width: 11px; height: 11px; flex-shrink: 0; }
 
 /* 靜態圖例（折線圖用，不可點擊） */
 .chart-legend--static .chart-legend__item { cursor: default; }
-.chart-legend--static .chart-legend__item:hover { border-bottom-color: transparent; }
+.chart-legend--static .chart-legend__item:hover { color: var(--c-text); }
 .chart-legend__line {
   width: 22px;
   height: 0;
@@ -268,8 +272,25 @@
   opacity: 0.55;
 }
 
-/* --- 圖表下方的說明與資料來源 ---
-   靠左對齊，左緣由 --axis 對齊圖表的 Y 軸位置（由 charts.js 依 viewBox 算出） */
+/* --- 圖例下方的操作說明 ---
+   緊貼圖例：用負的上邊距把整塊往上拉，蓋掉圖例原本的下邊距。
+   想再近一點就把 -26px 的絕對值加大，想拉開就減小。 */
+.chart-hint-lines {
+  margin: -26px 0 20px;
+  text-align: left;
+}
+.chart-hint-lines p {
+  margin: 0 0 0.2em;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  line-height: 1.7;
+  color: #8E8E8E;
+  letter-spacing: 0.02em;
+}
+.chart-hint-lines p:last-child { margin-bottom: 0; }
+
+/* --- 圖表下方的資料來源與備註 ---
+   靠左對齊，左緣與標題切齊 */
 .chart-foot {
   margin-top: 18px;
   padding-top: 14px;
@@ -279,7 +300,7 @@
 .chart-foot__list {
   list-style: none;
   margin: 0;
-  padding: 0 0 0 var(--axis, 0);
+  padding: 0;
 }
 .chart-foot__list li {
   position: relative;
@@ -298,9 +319,8 @@
   left: 0;
   color: var(--c-accent);
 }
-/* 資料解讀提醒：稍微強調，但仍是同一組 bullet */
-.chart-foot__note { color: var(--c-text) !important; font-weight: 500; }
-.chart-foot__source { font-size: 0.6875rem !important; opacity: 0.85; }
+/* 備註與資料來源使用完全相同的字體、字級、字重與顏色，
+   由上面的 .chart-foot__list li 統一設定，這裡不再另外覆寫 */
 
 /* --- 滑鼠提示框 --- */
 .chart-tip {
@@ -362,14 +382,6 @@
   .m-grid__items > img:last-child:nth-child(odd) { grid-column: auto; }
 }
 
-/* 小螢幕的圖表：維持可讀比例，改為在圖表框內左右滑動
-   （捲動只發生在圖表區塊內，整個頁面仍然不會左右移動） */
-@media (max-width: 640px) {
-  .m-chart__canvas {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .m-chart__canvas svg { min-width: 580px; }
-  .chart-foot__list li:first-child::after { content: "　（圖表可左右滑動）"; }
-  .chart-legend { justify-content: flex-start; }
-}
+/* 小螢幕的圖表：改用比較窄、比較高的畫布重畫（見 charts.js 的 narrow 判斷），
+   整張圖直接塞進畫面寬度，不需要左右滑動。 */
+
