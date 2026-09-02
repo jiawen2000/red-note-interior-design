@@ -13,7 +13,7 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 90;
-  width: 180px;
+  width: 240px;
   max-height: 76vh;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -45,8 +45,9 @@
   padding: 7px 8px 7px 10px;
   border-left: 2px solid var(--c-line);
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  line-height: 1.6;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  white-space: nowrap;
   color: var(--c-sub);
   transition: color 0.25s, border-color 0.25s, background 0.25s;
 }
