@@ -4,18 +4,15 @@
    讀者捲到內文第一個名詞、它進入畫面上半部時，把整個畫面壓暗，
    只留該名詞不被壓暗，旁邊出現說明小卡。
 
-   關閉：點畫面任一處、按「知道了」、按 Esc，或 8 秒後自動關閉。
-   預設同一個瀏覽階段只出現一次。
+   關閉：按「知道了」或按 Esc。
+   每次開啟頁面，只要捲到第一個名詞就會顯示，不需要修改網址。
 
-   除錯用：
-     · 網址加 ?hint=1      → 忽略「只出現一次」，強制顯示
-     · 主控台輸入 showTermHint()  → 立刻顯示，不必等捲動
+   除錯用：主控台輸入 showTermHint() → 立刻顯示，不必等捲動。
    ========================================================================== */
 
 (function () {
   'use strict';
 
-  const KEY = 'term-hint-shown';
   const DELAY = 250;         // 進入觸發範圍後等多久才顯示
                              // （不自動關閉；一定要按「知道了」才會消失）
   /* 亮起範圍比名詞本身大多少。
@@ -26,8 +23,6 @@
 
   const term = document.querySelector('#report .term[data-term]');
   if (!term) { console.warn('[term-hint] 找不到任何名詞按鈕'); return; }
-
-  const FORCE = /[?&]hint=1\b/.test(location.search);
 
   /* ------------------------------------------------------------------------
      建立元素
@@ -119,8 +114,6 @@
     if (opened) return;
     opened = true;
     stopWatching();
-    if (!FORCE) { try { sessionStorage.setItem(KEY, '1'); } catch (e) {} }
-
     // 手動觸發時名詞可能不在畫面上，先捲過去再定位
     const r0 = term.getBoundingClientRect();
     if (r0.bottom < 0 || r0.top > window.innerHeight) {
@@ -209,10 +202,6 @@
   }
 
   function start() {
-    if (!FORCE) {
-      try { if (sessionStorage.getItem(KEY)) { console.info('[term-hint] 這次瀏覽已顯示過，略過'); return; } }
-      catch (e) {}
-    }
     window.addEventListener('scroll', tick, { passive: true });
     window.addEventListener('resize', tick);
     tick();
