@@ -263,6 +263,16 @@
   transform: scale(var(--v-scale, 0.94));
   transform-origin: center;
   will-change: opacity, transform;
+  isolation: isolate;
+}
+
+/* 影片、遮罩、圖說與進度條使用明確圖層，避免行動瀏覽器把影片蓋在圖說上。 */
+.m-scrub .stage__video { z-index: 0; }
+.m-scrub__scrim { z-index: 1; }
+.m-scrub__caption,
+.m-scrub__loading,
+.m-scrub__progress { z-index: 2; }
+.m-scrub__caption { pointer-events: none; }
 }
 
 .m-scrub__scrim {
@@ -335,6 +345,26 @@
   #cover-scroll { --hero-scroll: 200vh; }
   .m-immersive  { --immersive-scroll: 220vh; }
   .m-scrub      { --scrub-scroll: 300vh; }
+
+  /* 行動瀏覽器在影片舞台淡出時，子元素圖說也會一起消失。
+     手機版改為全程維持影片與圖說可見，桌機仍保留原有淡入淡出與縮放效果。 */
+  .m-scrub .stage {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* 圖說固定在影片底部控制列上方，並為瀏海／Home 指示列預留安全距離。 */
+  .m-scrub__caption {
+    bottom: max(64px, calc(44px + env(safe-area-inset-bottom)));
+    max-width: min(var(--w-wide), 100%);
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    font-size: clamp(0.75rem, 3.5vw, 0.875rem);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.78);
+  }
+  .m-scrub__progress {
+    bottom: max(20px, calc(8px + env(safe-area-inset-bottom)));
+  }
 
   .cover__scrim {
     background: linear-gradient(180deg,
