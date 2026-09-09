@@ -101,6 +101,35 @@
      現在一律只有按下右上角的聲音鍵才會開啟聲音，行為在各裝置上一致。 */
   function dropGestureListeners() { /* 已不再註冊全域監聽，保留空函式供呼叫端使用 */ }
 
+  /* ------------------------------------------------------------------------
+     iOS：把讀者「已經要求的聲音」在使用者操作當下補上
+
+     iOS Safari 的音訊解鎖是「每個影片元素各自」的。讀者在封面按了聲音鍵，
+     只解鎖封面那支；捲到小紅書那支時，程式自己呼叫的有聲 play() 仍會被擋成
+     靜音。而且事後單純把 muted 改回 false 也不一定生效 ——
+     iOS 要的是「在使用者操作的當下對那個元素呼叫 play()」。
+
+     所以這裡監聽觸控／點擊，在事件當下把正在靜音播放的影片解除靜音並
+     重新 play() 一次，替它拿到解鎖。
+
+     ⚠ 這不是「自動開聲音」：
+        第一行就檢查 wantAudible()，讀者沒按過聲音鍵就完全不會動作。
+        做的只是把讀者已經表達的意願，補到 iOS 擋掉的那支影片上。
+     ---------------------------------------------------------------------- */
+  function applyWantedAudioOnGesture() {
+    if (!wantAudible()) return;
+    audible.forEach(function (v) {
+      // 封面由 applyCoverAudio() 專責，這裡不碰，避免搶走它的音訊工作階段
+      if (v === coverVideo || v.paused || !v.muted) return;
+      v.muted = false;
+      const p = v.play();            // 在使用者操作當下呼叫，iOS 才會給解鎖
+      if (p && p.catch) p.catch(function () { v.muted = true; });
+    });
+  }
+  ['touchend', 'pointerup', 'click'].forEach(function (ev) {
+    window.addEventListener(ev, applyWantedAudioOnGesture, { passive: true });
+  });
+
 
 
   // 讀者按下聲音鍵之後，讓已經在播的影片重新套用音訊

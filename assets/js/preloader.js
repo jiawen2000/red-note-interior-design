@@ -42,7 +42,7 @@
     MIN_DURATION:       1200,   // 最短停留毫秒數（避免快網速時載入畫面一閃而過）
     MAX_DURATION:       30000,  // 硬性上限：無論如何最多等這麼久就放行（30 秒）
     WAIT_IMAGE_COUNT:   3,      // 只等前幾張照片；其餘背景載。改成 Infinity = 全部都等
-    STALL_TIMEOUT:      25000,  // 某支影片緩衝停滯這麼久，就視同載完（見下方說明）
+    STALL_TIMEOUT:      25000,  // 某支影片緩衝停滯這麼久，就視同載完（封面影片不適用）
     FADE_DELAY:         400     // 進度跑到 100% 後、開始淡出前的緩衝毫秒數
   };
 
@@ -171,7 +171,24 @@
     if (o.done) return;
     o.done = true;
     o.ratio = 1;
+    warmUp(o.el);
     checkDone();
+  }
+
+  /* 封面影片載完的當下就靜音播起來 —— 此時載入畫面還蓋在上面，看不到也聽不到。
+     等載入畫面淡出時，影片早已經在跑，不會出現「進去了但畫面還是靜止劇照」。
+
+     為什麼要這樣做：
+     瀏覽器的自動播放政策只允許「靜音」的影片自動播放。若等到進場才呼叫
+     play()，中間任何一個環節失敗（影片還沒 ready、政策擋下）就會停在劇照上，
+     而補播的 updateCover() 只在捲動時執行，讀者停著不動就沒人補。
+     先播起來最單純，也最不會出錯。
+     聲音由 scroll-fx.js 的 applyCoverAudio() 在讀者按下聲音鍵後接手。 */
+  function warmUp(v) {
+    if (!v || v.id !== 'cover-video') return;
+    v.muted = true;                     // 未經使用者操作，只有靜音能自動播
+    const p = v.play();
+    if (p && p.catch) p.catch(function () { /* 被擋下就保留 poster，進場後再補 */ });
   }
 
   videoState.forEach(function (o) {
@@ -215,7 +232,11 @@
       const r = ratioOf(o.el);
       if (r > o.ratio + 0.001) { o.ratio = r; o.lastMove = now; }
       if (o.ratio >= 0.995) { markDone(o); return; }
-      // 緩衝不再前進 → 瀏覽器決定不再往下載，別再等它
+      /* 緩衝不再前進 → 瀏覽器決定不再往下載，別再等它。
+         ⚠ 封面影片除外：它必須真的整支載完才放行，
+         否則進場後影片可能還在緩衝、畫面停在劇照上。
+         真的卡住時仍有 MAX_DURATION 這道保險閥。 */
+      if (o.el.id === 'cover-video') return;
       if (now - o.lastMove > CONFIG.STALL_TIMEOUT) markDone(o);
     });
     checkDone();
