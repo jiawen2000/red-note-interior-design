@@ -8,7 +8,9 @@
    慢速網路下這兩件事會衝突，所以做法是「把等待範圍縮到最小 + 硬性上限」：
 
    等待清單（電腦約 6.3 MB／手機約 4.8 MB）：
-     · 封面影片 ← 完整載完
+     · 封面影片 ← 完整載完，**而且已經真的開始播放**
+       （只等緩衝不夠：資料到齊不代表畫面畫得出來，
+         iOS 更是在實際播放過之前完全不渲染任何影格）
        電腦 cover-lu-home.mp4（4.9 MB）／手機 cover-mobile.mp4（3.4 MB）
        由 index.html 裡封面 <video> 後面的行內腳本依螢幕比例挑一支
      · 字體 Noto Serif TC
@@ -104,6 +106,15 @@
   });
   let fontDone = false;
 
+  /* 封面影片「真的在播了」才放行 —— 只確認緩衝完成是不夠的。
+     影片資料下載完，不代表瀏覽器已經把畫面畫出來；
+     iOS 更是在影片實際播放過之前完全不會渲染任何影格。
+     若只等緩衝，載入畫面淡出的瞬間封面可能還是一張靜止劇照。
+     所以再多一道關卡：等到 currentTime 真的往前跑了才算數。 */
+  const coverWaited = videos.some(function (v) { return v.id === 'cover-video'; });
+  let coverReady = !coverWaited;
+  let coverGate  = null;
+
   const totalWeight =
     imgWeight * images.length +
     videoState.reduce(function (s, o) { return s + o.mb; }, 0) +
@@ -131,7 +142,7 @@
     render();
     const ok = imgState.every(function (d) { return d === 1; }) &&
                videoState.every(function (o) { return o.done; }) &&
-               fontDone;
+               fontDone && coverReady;
     if (ok) complete();
   }
 
@@ -187,8 +198,25 @@
   function warmUp(v) {
     if (!v || v.id !== 'cover-video') return;
     v.muted = true;                     // 未經使用者操作，只有靜音能自動播
+
+    // currentTime 真的往前跑，才代表畫面已經畫得出來
+    const confirm = function () {
+      if (coverReady) return;
+      if (!v.paused && v.currentTime > 0) {
+        coverReady = true;
+        clearTimeout(coverGate);
+        checkDone();
+      }
+    };
+    v.addEventListener('playing',    confirm);
+    v.addEventListener('timeupdate', confirm);
+
     const p = v.play();
     if (p && p.catch) p.catch(function () { /* 被擋下就保留 poster，進場後再補 */ });
+
+    /* 保險閥：1.5 秒內還沒真的播起來就別再等，
+       否則萬一某個瀏覽器擋下靜音自動播放，讀者會卡在載入畫面。 */
+    coverGate = setTimeout(function () { coverReady = true; checkDone(); }, 1500);
   }
 
   videoState.forEach(function (o) {
