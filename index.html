@@ -152,10 +152,12 @@
          停留時間 = 07-video-scroll.css 裡 .m-immersive 的 --immersive-scroll -->
     <section class="m-immersive" aria-label="小紅書影片精華剪輯">
       <div class="stage">
+        <!-- preload="none"：載入畫面只等封面影片，這支等讀者進入報導後
+             才由 scroll-fx.js 開始下載，才不會跟照片搶頻寬 -->
         <video class="stage__video"
-               src="assets/video/copypaste.mp4?v=68"
+               data-src="assets/video/copypaste.mp4?v=68"
                poster="assets/img/copypaste-poster.jpg?v=68"
-               playsinline preload="auto"></video>
+               playsinline preload="none"></video>
         <div class="m-immersive__scrim" aria-hidden="true"></div>
         <p class="m-immersive__caption">△ 小紅書上各式風格的居家設計。</p>
       </div>
@@ -200,14 +202,17 @@
          播完一遍需要的捲動距離 = 07-video-scroll.css 裡 .m-scrub 的 --scrub-scroll -->
     <section class="m-scrub" aria-label="Anson的家">
       <div class="stage">
-        <!-- 手機直式會自動換成 data-src-narrow 這支（1080x1920，版型已排好），
-             不做任何偵測或局部放大。要換影片改這兩個路徑就好。 -->
+        <!-- ⚠ 這裡刻意「不寫」src。瀏覽器一看到 src 就會立刻開始下載，
+             手機會先抓了橫式的 20MB，JS 再換成直式的又抓一次，等於下載兩遍。
+             改由 scroll-fx.js 依畫面寬度決定要載哪一支，讀者進入報導後才開始下載。
+             要換影片改下面兩組 data- 路徑就好。 -->
         <video class="stage__video"
-               src="assets/video/table.mp4?v=68"
+               data-src="assets/video/table.mp4?v=68"
+               data-poster="assets/img/table-poster.jpg?v=68"
                data-src-narrow="assets/video/table-mobile.mp4?v=69"
                data-poster-narrow="assets/img/table-mobile-poster.jpg?v=69"
                poster="assets/img/table-poster.jpg?v=68"
-               muted playsinline preload="auto"></video>
+               muted playsinline preload="none"></video>
         <div class="m-scrub__scrim" aria-hidden="true"></div>
         <p class="m-scrub__loading">LOADING</p>
         <p class="m-scrub__caption">△ Anson的家。</p>
@@ -538,7 +543,7 @@
 <!-- 腳本 -->
 <script src="assets/js/preloader.js?v=68"></script>
 <script src="assets/js/navigation.js?v=68"></script>
-<script src="assets/js/scroll-fx.js?v=68"></script>
+<script src="assets/js/scroll-fx.js?v=70"></script>
 <script src="assets/js/media.js?v=68"></script>
 <script src="assets/js/charts.js?v=68"></script>
 <script src="assets/js/glossary.js?v=68"></script>

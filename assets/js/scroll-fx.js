@@ -173,7 +173,8 @@
   const immersives = Array.from(document.querySelectorAll('.m-immersive')).map(function (sec) {
     const v = sec.querySelector('.stage__video');
     if (v) audible.push(v);
-    const o = { sec: sec, stage: sec.querySelector('.stage'), video: v, playing: false, gapTimer: null };
+    const o = { sec: sec, stage: sec.querySelector('.stage'), video: v, playing: false, gapTimer: null,
+                src: v ? v.dataset.src : null };
 
     /* 不使用 <video loop>，改成「播完 → 停在最後一格 → 隔幾秒再從頭播」，
        讓兩次循環之間有一段留白，聲音也才有機會重新淡入 */
@@ -229,14 +230,17 @@
     const video = sec.querySelector('.stage__video');
     const o = { sec: sec, stage: sec.querySelector('.stage'), video: video, ready: false, target: 0 };
 
-    /* 窄畫面（手機直式）：直接換成事先排好直式版型的影片檔。
+    /* 決定要用哪一支影片。窄畫面（手機直式）換成事先排好直式版型的檔案，
        影片本身就是 1080x1920，不需要任何偵測、裁切或局部放大。
-       想換影片只要改 index.html 裡的 data-src-narrow / data-poster-narrow。 */
-    if (video && NARROW_VIEW.matches) {
-      const small  = video.dataset.srcNarrow;
-      const poster = video.dataset.posterNarrow;
-      if (poster) video.poster = poster;
-      if (small) { video.src = small; video.load(); sec.classList.add('is-narrow-src'); }
+       ⚠ 這裡只決定「要載哪一支」，還不真的下載 —— 下載時機見檔案最下面的
+       loadDeferredVideos()，讓載入畫面能先把照片載完。 */
+    if (video) {
+      const narrow = NARROW_VIEW.matches && video.dataset.srcNarrow;
+      if (narrow) {
+        if (video.dataset.posterNarrow) video.poster = video.dataset.posterNarrow;
+        sec.classList.add('is-narrow-src');
+      }
+      o.src = narrow ? video.dataset.srcNarrow : video.dataset.src;
 
       /* iOS Safari 在影片「從未播放過」之前不會把畫面畫出來，
          只設定 currentTime 是看不到東西的。這裡靜音播一下再暫停，
@@ -248,7 +252,6 @@
         else { try { video.pause(); } catch (e) {} }
       };
       video.addEventListener('loadeddata', kick, { once: true });
-      if (video.readyState >= 2) kick();
     }
     if (video) {
       // metadata 載入完成前 video.duration 還不是有效數值
@@ -307,11 +310,33 @@
   /* ------------------------------------------------------------------------
      啟動
      ---------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------------
+     延後載入影片
+
+     為什麼要這樣做：
+     報導裡的影片加起來有幾十 MB。如果在 HTML 就寫 src + preload="auto"，
+     瀏覽器一開始解析頁面就會同時下載所有影片，跟載入畫面正在等的照片搶頻寬，
+     結果就是進度條卡在 9x% 很久，進去之後影片還是沒載好。
+
+     改成：載入畫面只等封面影片（5MB），讀者按下進入報導之後，
+     其他影片才開始下載。讀者一邊看前面的文字，影片一邊在背景載。
+     還沒載好時，.m-scrub__loading 的 LOADING 字樣會顯示出來。
+     ---------------------------------------------------------------------- */
+  function loadDeferredVideos() {
+    immersives.concat(scrubs).forEach(function (o) {
+      if (!o.video || !o.src || o.video.src) return;
+      o.video.preload = 'auto';
+      o.video.src = o.src;
+      o.video.load();
+    });
+  }
+
   function start() {
     applySound();
     tryPlay(coverVideo, true);
     coverStarted = true;
     frame();
+    loadDeferredVideos();
   }
   document.addEventListener('report:ready', start);
   if (!document.getElementById('loader')) start();
