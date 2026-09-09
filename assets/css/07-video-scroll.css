@@ -1,0 +1,381 @@
+/* ==========================================================================
+   07-video-scroll.css — 三個與捲動連動的影片區塊
+
+   1. #cover-scroll  封面 Hero：影片 sticky，兩階段淡出（標題 → 影片）
+   2. .m-immersive   小紅書精華剪輯：sticky 釘住、放大到滿版、循環播放（有聲）
+   3. .m-scrub       呂映昇的家：捲動位置 = 影片播放進度（scroll scrub）
+
+   ⚠ 三者都靠 position: sticky。若日後把 html/body 的 overflow-x 改回 hidden，
+     sticky 會全部失效 —— 請維持 00-base.css 裡的 overflow-x: clip。
+
+   進度計算與播放控制都在 assets/js/scroll-fx.js。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   共用：sticky 舞台
+   -------------------------------------------------------------------------- */
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--c-dark);
+}
+.stage__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    /* 放大時不會變形 */
+}
+
+/* ==========================================================================
+   1. 封面 Hero
+   scroll distance 由 #cover-scroll 的高度決定
+   ========================================================================== */
+#cover-scroll {
+  --hero-scroll: 220vh;   /* ← 想讓封面停久一點就加大 */
+
+  /* 光學對齊補償：
+     大字級的中文字在字框內本來就留有邊距，標題的視覺左緣會比容器邊界稍微往右；
+     小字的邊距按比例小很多，貼齊容器就會看起來凸出去。
+     這個值把細線、記者資訊、閱讀提示往右推一點，讓視覺左緣對齊標題。
+     覺得還是沒對齊就微調這個數字（想更靠右就加大）。 */
+  --cover-optical: clamp(3px, 0.4vw, 7px);
+  position: relative;
+  height: var(--hero-scroll);
+}
+
+#cover {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  background: var(--c-dark);
+  color: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(60px, 10vh, 110px) 0;
+  overflow: hidden;
+  /* 兩個階段的透明度由 scroll-fx.js 寫進這兩個變數 */
+  opacity: var(--cover-video-fade, 1);
+  transition: opacity 0.15s linear;
+}
+
+.cover__video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* 深色遮罩：左側較暗（文字區），右側較亮（看得見房間） */
+.cover__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(27, 26, 32, 0.62) 0%,
+      rgba(27, 26, 32, 0.30) 55%,
+      rgba(27, 26, 32, 0.16) 100%),
+    linear-gradient(180deg,
+      rgba(27, 26, 32, 0.34) 0%,
+      rgba(27, 26, 32, 0.10) 40%,
+      rgba(27, 26, 32, 0.52) 100%);
+}
+
+/* 標題：第一階段先淡出（字體、字級、位置都不變） */
+.cover__inner {
+  position: relative;
+  z-index: 2;
+  opacity: var(--cover-text-fade, 1);
+  transform: translateY(calc((1 - var(--cover-text-fade, 1)) * -26px));
+  will-change: opacity, transform;
+}
+
+.cover__rule {
+  width: 46px; height: 2px;
+  background: var(--c-bg);
+  opacity: 0.5;
+  margin: 0 0 2rem var(--cover-optical);
+}
+.cover__title    { font-size: var(--fs-hero); font-weight: 700; line-height: 1.22; letter-spacing: 0.02em; margin: 0 0 0.2em; }
+.cover__subtitle { font-size: calc(var(--fs-hero) * 0.62); font-weight: 700; line-height: 1.3; margin: 0 0 2.6rem; }
+.cover__meta {
+  color: #a9a7b0;
+  margin: 0;
+  padding-left: var(--cover-optical);
+}
+
+/* --- 封面的閱讀提示 --- */
+.cover__note {
+  max-width: 34em;
+  margin: clamp(20px, 3.5vh, 34px) 0 0 var(--cover-optical);
+  padding-top: clamp(14px, 2vh, 20px);
+  border-top: 1px solid rgba(240, 240, 240, 0.18);
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  line-height: 1.95;
+  letter-spacing: 0.04em;
+  color: #a9a7b0;
+}
+.cover__note-label {
+  color: var(--c-bg);
+  letter-spacing: 0.16em;
+}
+/* 用細線當作「｜」，比直接打全形直線乾淨 */
+.cover__note-label::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.85em;
+  margin: 0 0.7em -0.1em;
+  background: rgba(240, 240, 240, 0.35);
+}
+
+/* --- 右上角的聲音開關 --- */
+.cover__sound {
+  position: absolute;
+  top: clamp(16px, 3vh, 28px);
+  right: clamp(16px, 3vw, 32px);
+  z-index: 3;
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(240, 240, 240, 0.45);
+  border-radius: 50%;
+  color: var(--c-bg);
+  background: rgba(27, 26, 32, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: var(--cover-text-fade, 1);
+  transition: background 0.3s, border-color 0.3s, transform 0.3s var(--ease);
+}
+.cover__sound:hover { background: rgba(27, 26, 32, 0.6); border-color: rgba(240, 240, 240, 0.85); transform: scale(1.06); }
+.cover__sound svg { width: 19px; height: 19px; }
+/* 靜音時把斜線顯示出來 */
+.cover__sound .icon-slash { opacity: 0; transition: opacity 0.2s; }
+.cover__sound.is-muted .icon-wave  { opacity: 0.35; }
+.cover__sound.is-muted .icon-slash { opacity: 1; }
+
+/* --- 「向下滑」動態標誌 --- */
+.cover__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4vh, 40px);
+  z-index: 2;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--c-bg);
+  opacity: var(--cover-text-fade, 1);
+  pointer-events: none;
+}
+.cover__scroll-text { font-family: var(--font-sans); font-size: 0.6875rem; letter-spacing: 0.32em; text-indent: 0.32em; opacity: 0.75; }
+.cover__scroll-mouse { width: 22px; height: 34px; border: 1px solid rgba(240,240,240,0.7); border-radius: 11px; display: flex; justify-content: center; padding-top: 6px; }
+.cover__scroll-wheel { width: 3px; height: 6px; border-radius: 2px; background: var(--c-brand-red); animation: scroll-wheel 1.9s cubic-bezier(0.22,1,0.36,1) infinite; }
+@keyframes scroll-wheel {
+  0%   { transform: translateY(0);    opacity: 0; }
+  22%  { opacity: 1; }
+  70%  { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(12px); opacity: 0; }
+}
+.cover__scroll-arrows { display: flex; flex-direction: column; gap: 1px; }
+.cover__scroll-arrows span {
+  width: 9px; height: 9px;
+  border-right: 1px solid rgba(240,240,240,0.8);
+  border-bottom: 1px solid rgba(240,240,240,0.8);
+  transform: rotate(45deg);
+  animation: scroll-arrow 1.9s ease-in-out infinite;
+}
+.cover__scroll-arrows span:nth-child(2) { animation-delay: 0.22s; }
+@keyframes scroll-arrow { 0%,100% { opacity: 0.15; } 50% { opacity: 0.95; } }
+
+/* ==========================================================================
+   2. 沉浸式影片（小紅書精華剪輯）
+   進場淡入 → 放大到滿版 → 循環播放（有聲）→ 停止 → 淡出 → 解除 sticky
+   ========================================================================== */
+.m-immersive {
+  --immersive-scroll: 260vh;   /* ← 調整這個數字就能改變影片停留的時間 */
+  position: relative;
+  height: var(--immersive-scroll);
+  /* 不留上下 margin：sticky 容器加了 margin 會在解除固定後露出空白 */
+  margin: 0;
+}
+
+.m-immersive .stage {
+  /* 進場的縮放與淡入由 JS 依捲動進度寫入 */
+  opacity: var(--v-fade, 0);
+  transform: scale(var(--v-scale, 0.9));
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
+.m-immersive__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(27, 26, 32, 0.30) 0%,
+    rgba(27, 26, 32, 0.04) 30%,
+    rgba(27, 26, 32, 0.04) 62%,
+    rgba(27, 26, 32, 0.55) 100%);
+}
+
+.m-immersive__caption {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: clamp(24px, 5vh, 56px);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  max-width: var(--w-wide);
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+  color: rgba(240, 240, 240, 0.92);
+  text-align: center;
+}
+
+/* ==========================================================================
+   3. Scroll scrub 影片（呂映昇的家）
+   捲動距離 = 影片播放進度，停止捲動就停在當前影格
+   ========================================================================== */
+.m-scrub {
+  --scrub-scroll: 400vh;   /* ← 影片播完一遍需要捲多少距離 */
+  position: relative;
+  height: var(--scrub-scroll);
+  margin: 0;
+}
+
+.m-scrub .stage {
+  opacity: var(--v-fade, 0);
+  transform: scale(var(--v-scale, 0.94));
+  transform-origin: center;
+  will-change: opacity, transform;
+  isolation: isolate;
+}
+
+/* 影片、遮罩、圖說與進度條使用明確圖層，避免行動瀏覽器把影片蓋在圖說上。 */
+.m-scrub .stage__video { z-index: 0; }
+.m-scrub__scrim { z-index: 1; }
+.m-scrub__caption,
+.m-scrub__loading,
+.m-scrub__progress { z-index: 2; }
+.m-scrub__caption { pointer-events: none; }
+}
+
+.m-scrub__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(27, 26, 32, 0.34) 0%,
+    rgba(27, 26, 32, 0.04) 32%,
+    rgba(27, 26, 32, 0.04) 60%,
+    rgba(27, 26, 32, 0.62) 100%);
+}
+
+.m-scrub__caption {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: clamp(46px, 8vh, 78px);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  max-width: var(--w-wide);
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+  color: rgba(240, 240, 240, 0.92);
+  text-align: center;
+}
+
+/* 播放進度指示條 */
+.m-scrub__progress {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(22px, 4vh, 38px);
+  transform: translateX(-50%);
+  width: min(220px, 44vw);
+  height: 2px;
+  background: rgba(240, 240, 240, 0.28);
+}
+.m-scrub__progress i {
+  display: block;
+  height: 100%;
+  width: calc(var(--v-progress, 0) * 100%);
+  background: var(--c-brand-red);
+}
+
+/* 影片還在載入 metadata 時顯示 */
+.m-scrub__loading {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.24em;
+  color: rgba(240, 240, 240, 0.7);
+  transition: opacity 0.4s;
+}
+.m-scrub.is-ready .m-scrub__loading { opacity: 0; }
+
+/* --------------------------------------------------------------------------
+   響應式
+   -------------------------------------------------------------------------- */
+/* 畫面比 3:2 更窄時（手機直式、窄視窗），影片改為完整顯示不裁切。
+   scrub 那支影片畫面上有文字，用 object-fit: cover 會把兩側切掉看不到；
+   改成 contain 之後上下會露出舞台的深色底，但內容完整。 */
+@media (max-aspect-ratio: 3/2) {
+  .m-scrub .stage__video { object-fit: contain; }
+}
+
+@media (max-width: 700px) {
+  #cover-scroll { --hero-scroll: 200vh; }
+  .m-immersive  { --immersive-scroll: 220vh; }
+  .m-scrub      { --scrub-scroll: 300vh; }
+
+  /* 行動瀏覽器在影片舞台淡出時，子元素圖說也會一起消失。
+     手機版改為全程維持影片與圖說可見，桌機仍保留原有淡入淡出與縮放效果。 */
+  .m-scrub .stage {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* 圖說固定在影片底部控制列上方，並為瀏海／Home 指示列預留安全距離。 */
+  .m-scrub__caption {
+    bottom: max(64px, calc(44px + env(safe-area-inset-bottom)));
+    max-width: min(var(--w-wide), 100%);
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    font-size: clamp(0.75rem, 3.5vw, 0.875rem);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.78);
+  }
+  .m-scrub__progress {
+    bottom: max(20px, calc(8px + env(safe-area-inset-bottom)));
+  }
+
+  .cover__scrim {
+    background: linear-gradient(180deg,
+      rgba(27, 26, 32, 0.58) 0%,
+      rgba(27, 26, 32, 0.34) 45%,
+      rgba(27, 26, 32, 0.66) 100%);
+  }
+}
+
+/* 系統開啟「減少動態效果」時，只停掉裝飾性動畫；影片本身仍是報導內容 */
+@media (prefers-reduced-motion: reduce) {
+  .cover__scroll-wheel,
+  .cover__scroll-arrows span { animation: none; opacity: 0.8; }
+}
