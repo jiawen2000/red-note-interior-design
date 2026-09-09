@@ -1,1 +1,0 @@
-# red-note-interior-design
