@@ -73,11 +73,39 @@
      ========================================================================== -->
 <div id="cover-scroll">
   <header id="cover">
+    <!-- ⚠ 這裡刻意「不寫」src，理由與下方 Anson 家那支相同：
+         寫了 src 手機會先抓桌機版，腳本再換手機版又抓一次，等於下載兩遍。
+         由緊接著的 <script> 依螢幕比例挑一支。
+
+         手機版是 960x540（3.4MB），桌機版 1280x720（4.9MB）。
+         封面在手機上是滿版裁切，直式螢幕只看得到中間一條，
+         用不到橫向的高解析度；上面又有深色遮罩和標題，畫質差異看不出來。
+         載入畫面要等這支完整載完，所以它的大小直接決定讀者等多久。 -->
     <video id="cover-video" class="cover__video"
-           src="assets/video/cover-lu-home.mp4?v=68"
+           data-src-wide="assets/video/cover-lu-home.mp4?v=68"
+           data-src-narrow="assets/video/cover-mobile.mp4?v=78"
+           data-poster-narrow="assets/img/cover-mobile-poster.jpg?v=78"
+           data-mb-wide="4.9" data-mb-narrow="3.4"
            poster="assets/img/cover-poster.jpg?v=68"
            loop playsinline preload="auto"
            aria-hidden="true"></video>
+    <script>
+    /* 封面影片：依螢幕比例挑一支，只載一支。
+       判斷條件與 scroll-fx.js 的 NARROW_VIEW 一致。 */
+    (function () {
+      var v = document.getElementById('cover-video');
+      if (!v) return;
+      if (window.matchMedia('(max-aspect-ratio: 3/2)').matches) {
+        v.poster      = v.dataset.posterNarrow;
+        v.src         = v.dataset.srcNarrow;
+        v.dataset.mb  = v.dataset.mbNarrow;
+      } else {
+        v.src         = v.dataset.srcWide;
+        v.dataset.mb  = v.dataset.mbWide;
+      }
+      v.load();   // ⚠ 不能省，iOS 在明確呼叫 load() 前不會抓資料
+    })();
+    </script>
 
     <div class="cover__scrim" aria-hidden="true"></div>
 
@@ -152,10 +180,41 @@
          停留時間 = 07-video-scroll.css 裡 .m-immersive 的 --immersive-scroll -->
     <section class="m-immersive" aria-label="小紅書影片精華剪輯">
       <div class="stage">
-        <video class="stage__video"
-               src="assets/video/copypaste.mp4?v=68"
+        <!-- ⚠ 不寫 src，理由同封面與 Anson 家那兩支：
+             寫了手機會先抓桌機版再換手機版，等於下載兩遍。
+
+             手機版 960x540（3.2MB），桌機版 1280x720（4.5MB）。
+             這支在手機上是滿版裁切，直式螢幕只看得到中間那條直式內容，
+             用不到橫向的高解析度。
+
+             data-skip-preload：載入畫面不等這支載完，
+             它從一開始就在背景下載，讀者讀完引言滑到這裡時通常已經好了。
+             想改成「載完才放行」就把這個屬性拿掉。 -->
+        <video class="stage__video" id="immersive-video"
+               data-src-wide="assets/video/copypaste.mp4?v=68"
+               data-src-narrow="assets/video/copypaste-mobile.mp4?v=79"
+               data-poster-narrow="assets/img/copypaste-mobile-poster.jpg?v=79"
+               data-mb-wide="4.5" data-mb-narrow="3.2"
                poster="assets/img/copypaste-poster.jpg?v=68"
+               data-skip-preload
                playsinline preload="auto"></video>
+        <script>
+        /* 小紅書精華剪輯：依螢幕比例挑一支，只載一支。
+           判斷條件與 scroll-fx.js 的 NARROW_VIEW 一致。 */
+        (function () {
+          var v = document.getElementById('immersive-video');
+          if (!v) return;
+          if (window.matchMedia('(max-aspect-ratio: 3/2)').matches) {
+            v.poster     = v.dataset.posterNarrow;
+            v.src        = v.dataset.srcNarrow;
+            v.dataset.mb = v.dataset.mbNarrow;
+          } else {
+            v.src        = v.dataset.srcWide;
+            v.dataset.mb = v.dataset.mbWide;
+          }
+          v.load();   // ⚠ 不能省，iOS 在明確呼叫 load() 前不會抓資料
+        })();
+        </script>
         <div class="m-immersive__scrim" aria-hidden="true"></div>
         <p class="m-immersive__caption">△ 小紅書上各式風格的居家設計。</p>
       </div>
@@ -170,8 +229,8 @@
     <!-- 【模組：兩張並排】 -->
     <figure class="m-pair wrap-media reveal">
       <div class="m-pair__grid">
-        <img src="assets/img/fig-01a-ai-products.jpg?v=68" alt="廣州建博會 AI 家居產品 1">
-        <img src="assets/img/fig-01b-ai-products.jpg?v=68" alt="廣州建博會 AI 家居產品 2">
+        <img src="assets/img/fig-01a-ai-products.jpg?v=76" alt="廣州建博會 AI 家居產品 1">
+        <img src="assets/img/fig-01b-ai-products.jpg?v=76" alt="廣州建博會 AI 家居產品 2">
       </div>
       <figcaption class="caption">△ 在2026年中國廣州國際建築裝飾博覽會的攤位上，廠商積極和客戶介紹最新的AI家居整合系統、AI智慧設計平台，又或是AI環境情緒光等AI產品。</figcaption>
     </figure>
@@ -208,12 +267,21 @@
              改由下面緊接著的 <script> 在瀏覽器解析到這一行的當下就決定要載哪一支。
              下載時機跟寫死 src 幾乎一樣早，但只會載一支。
 
-             要換影片：改下面三個 data- 路徑，並把版本號 +1。 -->
+             要換影片：改下面三個 data- 路徑，並把版本號 +1。
+
+             data-skip-preload：
+             這支是三支影片裡最大的（電腦 19.9MB／手機 12.9MB）。
+             載入畫面「不等」它載完，讀者先進報導開始看前面的文字，
+             它在背景繼續下載。等讀者滑到這一段時通常已經好了。
+             封面與小紅書那兩支則是完全載完才放行 —— 因為一進報導就會看到。
+             想連這支也等完再放行，把這個屬性刪掉即可。 -->
         <video class="stage__video" id="scrub-video"
                data-src-wide="assets/video/table.mp4?v=73"
                data-src-narrow="assets/video/table-mobile.mp4?v=74"
                data-poster-narrow="assets/img/table-mobile-poster.jpg?v=74"
                poster="assets/img/table-poster.jpg?v=73"
+               data-mb-wide="19.9" data-mb-narrow="12.9"
+               data-skip-preload
                muted playsinline preload="auto"></video>
         <script>
         /* 依螢幕比例挑一支影片來載，只載一支。
@@ -226,13 +294,15 @@
           var v = document.getElementById('scrub-video');
           if (!v) return;
           if (window.matchMedia('(max-aspect-ratio: 3/2)').matches) {
-            v.poster = v.dataset.posterNarrow;
-            v.src    = v.dataset.srcNarrow;
+            v.poster     = v.dataset.posterNarrow;
+            v.src        = v.dataset.srcNarrow;
+            v.dataset.mb = v.dataset.mbNarrow;   // 載入畫面用它算進度權重
             v.removeAttribute('data-src-narrow');
             var sec = v.parentNode && v.parentNode.parentNode;
             if (sec) sec.classList.add('is-narrow-src');
           } else {
-            v.src = v.dataset.srcWide;
+            v.src        = v.dataset.srcWide;
+            v.dataset.mb = v.dataset.mbWide;
           }
           /* ⚠ 這行不能省。
              iOS Safari 不理會 preload="auto"，在明確呼叫 load()（或 play()）之前
@@ -276,9 +346,9 @@
     <!-- 【模組：三張組合】 -->
     <figure class="m-trio wrap-media reveal">
       <div class="m-trio__grid">
-        <img src="assets/img/fig-02a-taobao-service.jpg?v=68" alt="淘寶平台客服人員 1">
-        <img src="assets/img/fig-02b-taobao-service.jpg?v=68" alt="淘寶平台客服人員 2">
-        <img src="assets/img/fig-02c-taobao-service.jpg?v=68" alt="淘寶平台客服人員 3">
+        <img src="assets/img/fig-02a-taobao-service.jpg?v=76" alt="淘寶平台客服人員 1">
+        <img src="assets/img/fig-02b-taobao-service.jpg?v=76" alt="淘寶平台客服人員 2">
+        <img src="assets/img/fig-02c-taobao-service.jpg?v=76" alt="淘寶平台客服人員 3">
       </div>
       <figcaption class="caption">△ 圖為處理售前與售後的客服人員，若顧客不滿意服務並向平台投訴，平台可能會以封店、凍結貨款或限制店舖流量來約束店家。</figcaption>
     </figure>
@@ -316,10 +386,10 @@
     <!-- 【模組：多張照片網格】 -->
     <figure class="m-grid wrap-media reveal">
       <div class="m-grid__items">
-        <img src="assets/img/fig-03a-factory-export.jpg?v=68" alt="佛山家具工廠生產與外銷 1">
-        <img src="assets/img/fig-03b-factory-export.jpg?v=68" alt="佛山家具工廠生產與外銷 2">
-        <img src="assets/img/fig-03c-factory-export.jpg?v=68" alt="佛山家具工廠生產與外銷 3">
-        <img src="assets/img/fig-03d-factory-export.jpg?v=68" alt="佛山家具工廠生產與外銷 4">
+        <img src="assets/img/fig-03a-factory-export.jpg?v=76" alt="佛山家具工廠生產與外銷 1">
+        <img src="assets/img/fig-03b-factory-export.jpg?v=76" alt="佛山家具工廠生產與外銷 2">
+        <img src="assets/img/fig-03c-factory-export.jpg?v=76" alt="佛山家具工廠生產與外銷 3">
+        <img src="assets/img/fig-03d-factory-export.jpg?v=76" alt="佛山家具工廠生產與外銷 4">
       </div>
       <figcaption class="caption">△ 工廠裡的每道工序背後，都是一個人、一個家庭的生計。</figcaption>
     </figure>
@@ -333,7 +403,7 @@
 
     <!-- 【模組：單張照片】 -->
     <figure class="m-single wrap-media reveal">
-      <img src="assets/img/fig-04-longjiang-factory.jpg?v=68" alt="佛山市龍江鎮一帶的家具工廠">
+      <img src="assets/img/fig-04-longjiang-factory.jpg?v=76" alt="佛山市龍江鎮一帶的家具工廠">
       <figcaption class="caption">△ 佛山龍江鎮的家具大樓，一棟樓裡就有五、六家家具廠。楊曜提到，這裡的開廠門檻並不高，只要付得起前幾個月的店租，找來工人、備妥材料，幾萬元人民幣就能開設一間工廠。</figcaption>
     </figure>
 
@@ -347,12 +417,12 @@
     <!-- 【模組：多張照片網格】 -->
     <figure class="m-grid wrap-media reveal">
       <div class="m-grid__items">
-        <img src="assets/img/grid-01-workshop.jpg?v=68" alt="家具工廠各車間工序 1">
-        <img src="assets/img/grid-02-workshop.jpg?v=68" alt="家具工廠各車間工序 2">
-        <img src="assets/img/grid-03-workshop.jpg?v=68" alt="家具工廠各車間工序 3">
-        <img src="assets/img/grid-04-workshop.jpg?v=68" alt="家具工廠各車間工序 4">
-        <img src="assets/img/grid-05-workshop.jpg?v=68" alt="家具工廠各車間工序 5">
-        <img src="assets/img/grid-06-workshop.jpg?v=68" alt="家具工廠各車間工序 6">
+        <img src="assets/img/grid-01-workshop.jpg?v=76" alt="家具工廠各車間工序 1">
+        <img src="assets/img/grid-02-workshop.jpg?v=76" alt="家具工廠各車間工序 2">
+        <img src="assets/img/grid-03-workshop.jpg?v=76" alt="家具工廠各車間工序 3">
+        <img src="assets/img/grid-04-workshop.jpg?v=76" alt="家具工廠各車間工序 4">
+        <img src="assets/img/grid-05-workshop.jpg?v=76" alt="家具工廠各車間工序 5">
+        <img src="assets/img/grid-06-workshop.jpg?v=76" alt="家具工廠各車間工序 6">
       </div>
       <figcaption class="caption">△ 佛山當地不少家具工廠加班情況普遍，一個月僅休息2至4天。工人在木工、裁剪、車縫、捫皮、組裝、品檢、包裝與出貨等不同車間中，日復一日的依循家具製作流程。</figcaption>
     </figure>
@@ -377,9 +447,9 @@
     <!-- 【模組：三張組合】 -->
     <figure class="m-trio wrap-media reveal">
       <div class="m-trio__grid">
-        <img src="assets/img/fig-05-showroom.jpg?v=68" alt="佛山市家具家飾展廳 1">
-        <img src="assets/img/fig-06a-showroom.jpg?v=68" alt="佛山市家具家飾展廳 2">
-        <img src="assets/img/fig-06b-showroom.jpg?v=68" alt="佛山市家具家飾展廳 3">
+        <img src="assets/img/fig-05-showroom.jpg?v=76" alt="佛山市家具家飾展廳 1">
+        <img src="assets/img/fig-06a-showroom.jpg?v=76" alt="佛山市家具家飾展廳 2">
+        <img src="assets/img/fig-06b-showroom.jpg?v=76" alt="佛山市家具家飾展廳 3">
       </div>
       <figcaption class="caption">△ 佛山市家具、家飾展廳擺設的展示品是為了讓工廠得以向客戶展現其製造與客製化能力的空間，也是工廠接待國內外採購批發商、家具店、室內設計師等專業買家與洽談訂單的窗口。</figcaption>
     </figure>
@@ -405,7 +475,7 @@
 
     <!-- 【模組：單張照片】 -->
     <figure class="m-single wrap-media reveal">
-      <img src="assets/img/fig-08-media-agency.jpg?v=68" alt="佛山以家具產業為服務對象的媒體運營機構">
+      <img src="assets/img/fig-08-media-agency.jpg?v=76" alt="佛山以家具產業為服務對象的媒體運營機構">
       <figcaption class="caption">△ 在中國廣東省佛山市也有許多以家具與家居產業為主要服務對象的媒體運營機構，提供產業資訊傳播、品牌曝光及行銷推廣等服務。</figcaption>
     </figure>
 
@@ -419,8 +489,8 @@
     <!-- 【模組：兩張並排】 -->
     <figure class="m-pair wrap-media reveal">
       <div class="m-pair__grid">
-        <img src="assets/img/fig-07a-livestream.jpg?v=68" alt="建博會攤位上的直播帶貨 1">
-        <img src="assets/img/fig-07b-livestream.jpg?v=68" alt="建博會攤位上的直播帶貨 2">
+        <img src="assets/img/fig-07a-livestream.jpg?v=76" alt="建博會攤位上的直播帶貨 1">
+        <img src="assets/img/fig-07b-livestream.jpg?v=76" alt="建博會攤位上的直播帶貨 2">
       </div>
       <figcaption class="caption">△ 在2026年中國廣州國際建築裝飾博覽會，許多攤位架起直播台，現場帶貨。</figcaption>
     </figure>
@@ -433,7 +503,7 @@
 
     <!-- 【模組：單張照片】 -->
     <figure class="m-single wrap-media reveal">
-      <img src="assets/img/fig-09-worker-dormitory.jpg?v=68" alt="中國廣東省家具工廠的員工宿舍">
+      <img src="assets/img/fig-09-worker-dormitory.jpg?v=76" alt="中國廣東省家具工廠的員工宿舍">
       <figcaption class="caption">△ 中國廣東省家具工廠的員工宿舍。楊曜的工廠位於非家具產業聚落，為留住從外地而來的技術工人，特別提供宿舍，與龍江、樂從一帶師傅自由租房、隨時跳槽的生態形成對比。</figcaption>
     </figure>
 
@@ -454,7 +524,7 @@
 
     <!-- 【模組：單張照片】 -->
     <figure class="m-single wrap-media reveal">
-      <img src="assets/img/fig-10-tw-factory.jpg?v=68" alt="台灣家具工廠從淘寶採購半成品後加工">
+      <img src="assets/img/fig-10-tw-factory.jpg?v=76" alt="台灣家具工廠從淘寶採購半成品後加工">
       <figcaption class="caption">△ 現今已有許多台灣家具工廠考量到製作成本，會從淘寶採購半成品，並透過視訊遠端控管品質，再運回台灣加工、換色，形成另一種家具銷售模式。</figcaption>
     </figure>
 
@@ -482,7 +552,7 @@
 
     <!-- 【模組：單張照片】 -->
     <figure class="m-single wrap-media reveal">
-      <img src="assets/img/fig-11-wugu-showroom.jpg?v=68" alt="新北市五股區家具工廠的展示間">
+      <img src="assets/img/fig-11-wugu-showroom.jpg?v=76" alt="新北市五股區家具工廠的展示間">
       <figcaption class="caption">△ 新北市五股區家具工廠早期主要供應五股地區的家具店批發，隨著網路發展與消費習慣改變，如今已轉向全客製化路線。因此，展示間陳列的沙發與家具並非大量現貨，而是用於展示工藝與技術，偶爾也會提供一般散客直接購買。</figcaption>
     </figure>
 
@@ -571,9 +641,9 @@
 
 
 <!-- 腳本 -->
-<script src="assets/js/preloader.js?v=68"></script>
+<script src="assets/js/preloader.js?v=79"></script>
 <script src="assets/js/navigation.js?v=68"></script>
-<script src="assets/js/scroll-fx.js?v=73"></script>
+<script src="assets/js/scroll-fx.js?v=81"></script>
 <script src="assets/js/media.js?v=68"></script>
 <script src="assets/js/charts.js?v=68"></script>
 <script src="assets/js/glossary.js?v=68"></script>

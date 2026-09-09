@@ -219,6 +219,16 @@
       o.playing = visible;
       if (visible) startImmersive(o);
       else stopImmersive(o);
+    } else if (o.video && o.playing && !o.video.paused && o.video.muted && wantAudible()) {
+      /* iOS Safari 的音訊解鎖是「每個影片元素各自」的：
+         讀者在封面按了聲音鍵，只解鎖封面那支，不會連帶解鎖後面的影片。
+         所以捲到這支時，tryPlay() 呼叫的有聲 play() 會被 iOS 擋下來，
+         catch 就改成靜音播放 —— 這就是「手機第一次滑下去沒聲音」。
+
+         這裡在影片「已經開始播」之後才解除靜音。
+         對已在播放的元素解除靜音，在頁面有使用者操作後 iOS 是允許的，
+         而且不會像「先 play 再 pause」那樣搶走封面影片的音訊工作階段。 */
+      o.video.muted = false;
     }
   }
 
