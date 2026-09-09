@@ -74,10 +74,22 @@
     const p = v.play();
     if (p && p.catch) {
       p.catch(function () {
-        // 有聲播放被擋 → 先靜音播放，聲音等讀者操作後再開
+        // 有聲播放被擋 → 先靜音播放
         v.muted = true;
         const q = v.play();
-        if (q && q.catch) q.catch(function () {});
+        if (q && q.then) {
+          q.then(function () {
+            /* iOS 的音訊解鎖是「每個影片元素各自」的：讀者在封面按了聲音鍵，
+               只解鎖封面那支，捲到後面的影片時有聲 play() 一樣會被擋成靜音。
+               但影片「已經在播放」之後解除靜音是允許的，而且不會啟動
+               新的音訊工作階段（那會把封面影片的聲音搶走）。
+               所以等靜音播放真的開始了，再把聲音打開。 */
+            if (wantSound && wantAudible() && v !== coverVideo) {
+              v.muted = false;
+              syncIcon();
+            }
+          }).catch(function () {});
+        }
         syncIcon();          // 圖示要反映實際狀態，不能顯示成有聲
       });
     }
@@ -317,11 +329,30 @@
   /* ------------------------------------------------------------------------
      啟動
      ---------------------------------------------------------------------- */
+  /* 封面影片必須「一進報導就在播」。
+     play() 可能因為影片還沒準備好而失敗，而補播的 updateCover() 只在
+     捲動時才執行 —— 讀者停在封面不動就沒有人補播，畫面會停在劇照上。
+     所以這裡自己重試，直到播起來或超過 5 秒為止。 */
+  function ensureCoverPlaying() {
+    if (!coverVideo) return;
+    const retry = function () {
+      if (coverStarted && coverVideo.paused) tryPlay(coverVideo, true);
+    };
+    coverVideo.addEventListener('canplay',    retry);
+    coverVideo.addEventListener('loadeddata', retry);
+    let tries = 0;
+    const timer = setInterval(function () {
+      if (!coverVideo.paused || ++tries > 20) { clearInterval(timer); return; }
+      retry();
+    }, 250);
+  }
+
   function start() {
+    coverStarted = true;      // 要先設 true，applyCoverAudio() 才會幫忙補播
     applySound();
     tryPlay(coverVideo, true);
-    coverStarted = true;
     frame();
+    ensureCoverPlaying();
   }
   document.addEventListener('report:ready', start);
   if (!document.getElementById('loader')) start();

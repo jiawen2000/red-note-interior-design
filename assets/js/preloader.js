@@ -269,11 +269,17 @@
     // 這裡再歸零一次（網址帶錨點時不動，保留跳轉行為）
     if (!location.hash) window.scrollTo(0, 0);
 
-    // 進場時確保封面影片開始播放（部分瀏覽器會在背景分頁暫停自動播放）
+    /* 進場時確保封面影片開始播放（部分瀏覽器會在背景分頁暫停自動播放）。
+       ⚠ 一定要先 muted = true 再 play()。封面影片是有聲的，
+       沒有使用者操作就呼叫有聲 play()，一定會被自動播放政策擋下，
+       這個失敗的呼叫會干擾緊接著 scroll-fx.js 的播放。
+       正確的靜音狀態由 scroll-fx.js 的 applyCoverAudio() 在
+       report:ready 之後接手決定。 */
     const coverVideo = document.getElementById('cover-video');
     if (coverVideo && coverVideo.paused) {
+      coverVideo.muted = true;
       const p = coverVideo.play();
-      if (p && p.catch) p.catch(function () { /* 被瀏覽器擋下時保留 poster 靜圖 */ });
+      if (p && p.catch) p.catch(function () { /* 被擋下時保留 poster 靜圖 */ });
     }
 
     // 通知其他模組：報導已開始（navigation.js 會據此啟動進場動畫）
