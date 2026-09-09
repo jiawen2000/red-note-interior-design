@@ -179,10 +179,18 @@
     /* 不使用 <video loop>，改成「播完 → 停在最後一格 → 隔幾秒再從頭播」，
        讓兩次循環之間有一段留白，聲音也才有機會重新淡入 */
     if (v) {
+      // 網路不穩導致中途斷線時，重新載入一次
+      v.addEventListener('error', function () {
+        if (!o.src || o.retried) return;
+        o.retried = true;
+        setTimeout(function () { v.src = o.src; v.load(); }, 2000);
+      });
+
       v.addEventListener('ended', function () {
         if (!o.playing) return;
         clearTimeout(o.gapTimer);
         o.gapTimer = setTimeout(function () {
+          o.gapTimer = null;
           if (!o.playing) return;
           v.currentTime = 0;
           tryPlay(v, true);
@@ -220,6 +228,12 @@
       o.playing = visible;
       if (visible) startImmersive(o);
       else stopImmersive(o);
+    } else if (o.video && o.playing && o.video.paused && !o.gapTimer && o.video.readyState >= 3) {
+      /* 影片還在下載時讀者就滑到這裡，第一次 play() 會失敗，
+         而上面的判斷只在「看得見/看不見」改變時才觸發，不會自己重試。
+         網路慢的時候就會卡在劇照上不動，所以這裡等緩衝夠了再補播一次。
+         readyState >= 3（HAVE_FUTURE_DATA）＝已經可以往下播了。 */
+      tryPlay(o.video, true);
     }
   }
 
@@ -255,15 +269,27 @@
     }
     if (video) {
       // metadata 載入完成前 video.duration 還不是有效數值
+      /* duration 一到位就能開始換算捲動進度，但這時畫面通常還沒緩衝出來，
+         所以 LOADING 字樣要等真的畫得出影格（canplay）才收掉，
+         否則網路慢的時候會變成「沒有 LOADING、也沒有畫面」的黑畫面。 */
       const onMeta = function () {
         if (!isFinite(video.duration) || video.duration <= 0) return;
         o.ready = true;
-        sec.classList.add('is-ready');
         seek(o);                       // 立刻同步到目前的捲動位置
       };
-      if (video.readyState >= 1) onMeta();
+      const onPlayable = function () { sec.classList.add('is-ready'); };
       video.addEventListener('loadedmetadata', onMeta);
-      video.addEventListener('error', function () { sec.classList.add('is-ready'); });
+      video.addEventListener('canplay', onPlayable);
+      if (video.readyState >= 1) onMeta();
+      if (video.readyState >= 3) onPlayable();
+
+      // 網路不穩導致中途斷線時，重新載入一次
+      video.addEventListener('error', function () {
+        sec.classList.add('is-ready');
+        if (!o.src || o.retried) return;
+        o.retried = true;
+        setTimeout(function () { video.src = o.src; video.load(); }, 2000);
+      });
     }
     return o;
   });
