@@ -1,0 +1,167 @@
+/* ==========================================================================
+   00-base.css — 全站變數、重置、字體、共用排版
+   修改全站的顏色與字級，請只改這一支檔案的 :root 變數
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 設計變數（Design Tokens）
+   -------------------------------------------------------------------------- */
+:root {
+  /* 色彩 —— 來自設計稿設定 */
+  --c-bg:        #f0f0f0;  /* 正文底色（淺灰） */
+  --c-text:      #000000;  /* 文字主色 */
+  --c-sub:       #454545;  /* 輔助資訊（圖說、日期、註解） */
+  --c-accent:    #ac231a;  /* 強調色（小標底線、名詞標記） */
+  --c-dark:      #1B1A20;  /* 封面／載入畫面深色底 */
+  --c-brand-red: #FE231D;  /* 小紅書商標紅，僅用於「小紅書」三字 */
+  --c-line:      #d5d5d5;  /* 分隔線 */
+  --c-paper:     #ffffff;  /* 卡片、名詞框底色 */
+
+  /* 字體 */
+  --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-sans:  "Helvetica Neue", "Noto Sans TC", "PingFang TC", sans-serif;
+
+  /* 字級 —— 使用 clamp() 自動隨螢幕寬度縮放，不需寫 media query */
+  --fs-hero:  clamp(2.2rem, 7vw, 5rem);              /* 封面主標 */
+  --fs-h3:    clamp(1.25rem, 3vw, 1.75rem);          /* 內文小標 */
+  --fs-body:  clamp(1rem, 1.05rem + 0.2vw, 1.15rem); /* 內文 */
+  --fs-small: 0.8125rem;                             /* 圖說、註記 */
+
+  /* 版面 */
+  --w-text:  680px;   /* 內文欄寬（閱讀舒適寬度） */
+  --w-media: 900px;   /* 圖片區塊最大寬度 */
+  --w-wide:  1080px;  /* 封面、頁尾等寬版區塊 */
+  --pad:     clamp(20px, 5vw, 48px); /* 左右內距 */
+
+  /* 動態 */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. 重置
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* ⚠ 這裡一定要用 clip 而不是 hidden。
+     overflow-x: hidden 會讓 html/body 變成捲動容器，
+     導致頁面裡所有 position: sticky 全部失效（封面與影片區塊都靠 sticky）。
+     overflow: clip 一樣不會左右捲動，但不會建立捲動容器。 */
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;     /* 同上：用 clip 才不會破壞 sticky */
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 載入期間鎖住捲動，讀者無法提前進入報導 */
+body.is-loading { overflow: hidden; height: 100vh; }
+
+img, video, svg { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+figure { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+/* 尊重使用者的「減少動態效果」系統設定 */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* --------------------------------------------------------------------------
+   3. 共用版面容器（全部置中）
+   -------------------------------------------------------------------------- */
+
+/* 內文欄：所有段落、小標都放在這個容器裡 */
+.wrap-text  { max-width: var(--w-text);  margin-inline: auto; padding-inline: var(--pad); }
+/* 圖片欄：照片與圖說，與內文同樣置中 */
+.wrap-media { max-width: var(--w-media); margin-inline: auto; padding-inline: var(--pad); }
+/* 寬版欄：封面、頁尾用 */
+.wrap-wide  { max-width: var(--w-wide);  margin-inline: auto; padding-inline: var(--pad); }
+
+/* --------------------------------------------------------------------------
+   4. 共用文字樣式
+   -------------------------------------------------------------------------- */
+
+/* 內文段落 —— 全篇（含第一段）大小與顏色一致 */
+.p {
+  margin: 0 0 1.55em;
+  text-align: justify;
+  text-justify: inter-ideograph;
+}
+
+/* 報導開場的兩段：淺灰底框，字級 75%，文字顏色與正文相同
+   下方留一段空白，與正文區隔（原本的 Favicon 分隔已移除） */
+.lead-box {
+  background: #E5E5E5;
+  padding: clamp(20px, 3.2vw, 30px) clamp(20px, 3.2vw, 32px);
+  margin-bottom: clamp(42px, 7vh, 72px);
+}
+.lead-box .p:last-child { margin-bottom: 0; }
+
+.p--lead {
+  color: var(--c-text);
+  font-size: 75%;
+}
+
+/* 內文小標（紅色底線） */
+.h3 {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 3.2em 0 1.4em;
+  padding-bottom: 0.35em;
+  border-bottom: 2px solid var(--c-accent);
+  display: inline-block;
+  scroll-margin-top: 60px;
+}
+
+/* 標籤文字（英文小字） */
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+/* 輔助資訊：記者、日期、圖說 */
+.meta {
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
+  color: var(--c-sub);
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+}
+
+/* 「小紅書」三字專用（商標紅） */
+.brand { color: var(--c-brand-red); }
+
+/* 螢幕閱讀器專用（視覺上隱藏，無障礙仍讀得到） */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. 捲動進場動畫（由 navigation.js 加上 .is-visible）
+   -------------------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
