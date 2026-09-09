@@ -23,11 +23,7 @@
     immersive: { fadeIn: [0.00, 0.12], fadeOut: [0.86, 1.00], scaleIn: [0.00, 0.20] },
     scrub:     { fadeIn: [0.00, 0.06], fadeOut: [0.94, 1.00], scaleIn: [0.00, 0.10] }
   };
-  /* Safari：差距小於這個秒數就不重新 seek。
-     手機（尤其 iOS）對高解析度影片的頻繁 seek 特別吃記憶體，容易讓分頁崩潰，
-     所以窄畫面改用較小的影片檔，門檻也放寬，減少 seek 次數。 */
-  const NARROW_VIEW = window.matchMedia('(max-aspect-ratio: 3/2)');
-  const SEEK_THRESHOLD = NARROW_VIEW.matches ? 0.07 : 0.02;
+  const SEEK_THRESHOLD = 0.02;   // Safari：差距小於這個秒數就不重新 seek
 
   /* 沉浸式影片的循環設定 */
   const AUDIO = {
@@ -83,18 +79,28 @@
     }
   }
 
-  /* ⚠ 不做「第一次操作就自動開聲音」。
-     手機上捲動會產生 touchstart，被當成使用者操作後聲音就自己打開了；
-     桌機用滾輪捲動不會觸發，所以只有手機出問題。
-     現在一律只有按下右上角的聲音鍵才會開啟聲音，行為在各裝置上一致。 */
-  function dropGestureListeners() { /* 已不再註冊全域監聽，保留空函式供呼叫端使用 */ }
+  // 只有點擊／觸控／按鍵才算瀏覽器認可的「使用者操作」，捲動不算
+  const GESTURES = ['pointerdown', 'touchstart', 'keydown'];
 
+  function dropGestureListeners() {
+    GESTURES.forEach(function (ev) { window.removeEventListener(ev, onFirstGesture); });
+  }
 
+  /* ⚠ 這裡刻意略過「點在聲音按鈕上」的情況。
+     否則按鈕的 pointerdown 會先讓 unlock() 把聲音打開，
+     接著按鈕自己的 click 再 toggle 一次又關掉 ——
+     結果就是第一次點擊只響 0.1 秒又跳回靜音。
+     點在按鈕上時，狀態一律交給按鈕的 click 處理。 */
+  function onFirstGesture(e) {
+    if (soundBtn && e && e.target && soundBtn.contains(e.target)) return;
+    unlock();
+  }
 
-  // 讀者按下聲音鍵之後，讓已經在播的影片重新套用音訊
+  // 讀者第一次操作頁面（按鈕以外的地方）→ 解鎖聲音
   function unlock() {
     if (SOUND.unlocked) return;
     SOUND.unlocked = true;
+    dropGestureListeners();
     applySound();
     // 已經在播的影片重新 play 一次，讓解除靜音後的音訊生效
     audible.forEach(function (v) {
@@ -103,6 +109,10 @@
       }
     });
   }
+
+  GESTURES.forEach(function (ev) {
+    window.addEventListener(ev, onFirstGesture, { passive: true });
+  });
 
   if (soundBtn) {
     soundBtn.addEventListener('click', function () {
@@ -173,24 +183,15 @@
   const immersives = Array.from(document.querySelectorAll('.m-immersive')).map(function (sec) {
     const v = sec.querySelector('.stage__video');
     if (v) audible.push(v);
-    const o = { sec: sec, stage: sec.querySelector('.stage'), video: v, playing: false, gapTimer: null,
-                src: v ? v.dataset.src : null };
+    const o = { sec: sec, stage: sec.querySelector('.stage'), video: v, playing: false, gapTimer: null };
 
     /* 不使用 <video loop>，改成「播完 → 停在最後一格 → 隔幾秒再從頭播」，
        讓兩次循環之間有一段留白，聲音也才有機會重新淡入 */
     if (v) {
-      // 網路不穩導致中途斷線時，重新載入一次
-      v.addEventListener('error', function () {
-        if (!o.src || o.retried) return;
-        o.retried = true;
-        setTimeout(function () { v.src = o.src; v.load(); }, 2000);
-      });
-
       v.addEventListener('ended', function () {
         if (!o.playing) return;
         clearTimeout(o.gapTimer);
         o.gapTimer = setTimeout(function () {
-          o.gapTimer = null;
           if (!o.playing) return;
           v.currentTime = 0;
           tryPlay(v, true);
@@ -228,12 +229,6 @@
       o.playing = visible;
       if (visible) startImmersive(o);
       else stopImmersive(o);
-    } else if (o.video && o.playing && o.video.paused && !o.gapTimer && o.video.readyState >= 3) {
-      /* 影片還在下載時讀者就滑到這裡，第一次 play() 會失敗，
-         而上面的判斷只在「看得見/看不見」改變時才觸發，不會自己重試。
-         網路慢的時候就會卡在劇照上不動，所以這裡等緩衝夠了再補播一次。
-         readyState >= 3（HAVE_FUTURE_DATA）＝已經可以往下播了。 */
-      tryPlay(o.video, true);
     }
   }
 
@@ -243,53 +238,17 @@
   const scrubs = Array.from(document.querySelectorAll('.m-scrub')).map(function (sec) {
     const video = sec.querySelector('.stage__video');
     const o = { sec: sec, stage: sec.querySelector('.stage'), video: video, ready: false, target: 0 };
-
-    /* 決定要用哪一支影片。窄畫面（手機直式）換成事先排好直式版型的檔案，
-       影片本身就是 1080x1920，不需要任何偵測、裁切或局部放大。
-       ⚠ 這裡只決定「要載哪一支」，還不真的下載 —— 下載時機見檔案最下面的
-       loadDeferredVideos()，讓載入畫面能先把照片載完。 */
-    if (video) {
-      const narrow = NARROW_VIEW.matches && video.dataset.srcNarrow;
-      if (narrow) {
-        if (video.dataset.posterNarrow) video.poster = video.dataset.posterNarrow;
-        sec.classList.add('is-narrow-src');
-      }
-      o.src = narrow ? video.dataset.srcNarrow : video.dataset.src;
-
-      /* iOS Safari 在影片「從未播放過」之前不會把畫面畫出來，
-         只設定 currentTime 是看不到東西的。這裡靜音播一下再暫停，
-         逼它渲染第一格。 */
-      const kick = function () {
-        video.muted = true;
-        const q = video.play();
-        if (q && q.then) q.then(function () { video.pause(); }).catch(function () {});
-        else { try { video.pause(); } catch (e) {} }
-      };
-      video.addEventListener('loadeddata', kick, { once: true });
-    }
     if (video) {
       // metadata 載入完成前 video.duration 還不是有效數值
-      /* duration 一到位就能開始換算捲動進度，但這時畫面通常還沒緩衝出來，
-         所以 LOADING 字樣要等真的畫得出影格（canplay）才收掉，
-         否則網路慢的時候會變成「沒有 LOADING、也沒有畫面」的黑畫面。 */
       const onMeta = function () {
         if (!isFinite(video.duration) || video.duration <= 0) return;
         o.ready = true;
+        sec.classList.add('is-ready');
         seek(o);                       // 立刻同步到目前的捲動位置
       };
-      const onPlayable = function () { sec.classList.add('is-ready'); };
-      video.addEventListener('loadedmetadata', onMeta);
-      video.addEventListener('canplay', onPlayable);
       if (video.readyState >= 1) onMeta();
-      if (video.readyState >= 3) onPlayable();
-
-      // 網路不穩導致中途斷線時，重新載入一次
-      video.addEventListener('error', function () {
-        sec.classList.add('is-ready');
-        if (!o.src || o.retried) return;
-        o.retried = true;
-        setTimeout(function () { video.src = o.src; video.load(); }, 2000);
-      });
+      video.addEventListener('loadedmetadata', onMeta);
+      video.addEventListener('error', function () { sec.classList.add('is-ready'); });
     }
     return o;
   });
@@ -336,33 +295,11 @@
   /* ------------------------------------------------------------------------
      啟動
      ---------------------------------------------------------------------- */
-  /* ------------------------------------------------------------------------
-     延後載入影片
-
-     為什麼要這樣做：
-     報導裡的影片加起來有幾十 MB。如果在 HTML 就寫 src + preload="auto"，
-     瀏覽器一開始解析頁面就會同時下載所有影片，跟載入畫面正在等的照片搶頻寬，
-     結果就是進度條卡在 9x% 很久，進去之後影片還是沒載好。
-
-     改成：載入畫面只等封面影片（5MB），讀者按下進入報導之後，
-     其他影片才開始下載。讀者一邊看前面的文字，影片一邊在背景載。
-     還沒載好時，.m-scrub__loading 的 LOADING 字樣會顯示出來。
-     ---------------------------------------------------------------------- */
-  function loadDeferredVideos() {
-    immersives.concat(scrubs).forEach(function (o) {
-      if (!o.video || !o.src || o.video.src) return;
-      o.video.preload = 'auto';
-      o.video.src = o.src;
-      o.video.load();
-    });
-  }
-
   function start() {
     applySound();
     tryPlay(coverVideo, true);
     coverStarted = true;
     frame();
-    loadDeferredVideos();
   }
   document.addEventListener('report:ready', start);
   if (!document.getElementById('loader')) start();

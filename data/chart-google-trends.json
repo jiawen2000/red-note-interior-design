@@ -814,7 +814,7 @@
   "r2": 0.816,
   "label": "線性趨勢"
  },
- "annotationsSrc": "data/chart-google-trends-annotations.json?v=68",
+ "annotationsSrc": "data/chart-google-trends-annotations.json?v=4",
  "hints": [
   "滑鼠移至折線或紅點，可查看每月搜尋熱度及關鍵事件與成因判讀"
  ],
