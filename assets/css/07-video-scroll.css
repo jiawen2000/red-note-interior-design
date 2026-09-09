@@ -3,7 +3,7 @@
 
    1. #cover-scroll  封面 Hero：影片 sticky，兩階段淡出（標題 → 影片）
    2. .m-immersive   小紅書精華剪輯：sticky 釘住、放大到滿版、循環播放（有聲）
-   3. .m-scrub       呂映昇的家：捲動位置 = 影片播放進度（scroll scrub）
+   3. .m-scrub       Anson 的家：捲動位置 = 影片播放進度（scroll scrub）
 
    ⚠ 三者都靠 position: sticky。若日後把 html/body 的 overflow-x 改回 hidden，
      sticky 會全部失效 —— 請維持 00-base.css 裡的 overflow-x: clip。
@@ -248,7 +248,7 @@
 }
 
 /* ==========================================================================
-   3. Scroll scrub 影片（呂映昇的家）
+   3. Scroll scrub 影片（Anson 的家）
    捲動距離 = 影片播放進度，停止捲動就停在當前影格
    ========================================================================== */
 .m-scrub {
@@ -273,7 +273,6 @@
 .m-scrub__loading,
 .m-scrub__progress { z-index: 2; }
 .m-scrub__caption { pointer-events: none; }
-}
 
 .m-scrub__scrim {
   position: absolute;
@@ -334,11 +333,14 @@
 /* --------------------------------------------------------------------------
    響應式
    -------------------------------------------------------------------------- */
-/* 畫面比 3:2 更窄時（手機直式、窄視窗），影片改為完整顯示不裁切。
-   scrub 那支影片畫面上有文字，用 object-fit: cover 會把兩側切掉看不到；
-   改成 contain 之後上下會露出舞台的深色底，但內容完整。 */
+/* 窄畫面（手機直式、窄視窗）：
+   兩支影片都維持共用的 object-fit: cover，也就是放大到填滿整個舞台。
+   · 沉浸式影片（小紅書精華剪輯）本來就是為裁切而設計的，放大後才有沉浸感
+   · Anson 家那支會由 scroll-fx.js 換成直式版（1080x1920），本身就是手機比例
+   唯一的例外是「窄視窗但沒換成直式檔」（例如桌機把視窗縮很窄），
+   這時橫式影片上的文字會被切掉，退回 contain 至少內容完整。 */
 @media (max-aspect-ratio: 3/2) {
-  .m-scrub .stage__video { object-fit: contain; }
+  .m-scrub:not(.is-narrow-src) .stage__video { object-fit: contain; }
 }
 
 @media (max-width: 700px) {
@@ -352,6 +354,9 @@
     opacity: 1 !important;
     transform: none !important;
   }
+
+  /* 影片區塊與下一段內文之間多留一行，文字不要緊貼著影片。 */
+  .m-scrub + .wrap-text { margin-top: 1.9em; }
 
   /* 圖說固定在影片底部控制列上方，並為瀏海／Home 指示列預留安全距離。 */
   .m-scrub__caption {

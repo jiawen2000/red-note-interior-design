@@ -23,7 +23,11 @@
     immersive: { fadeIn: [0.00, 0.12], fadeOut: [0.86, 1.00], scaleIn: [0.00, 0.20] },
     scrub:     { fadeIn: [0.00, 0.06], fadeOut: [0.94, 1.00], scaleIn: [0.00, 0.10] }
   };
-  const SEEK_THRESHOLD = 0.02;   // Safari：差距小於這個秒數就不重新 seek
+  /* Safari：差距小於這個秒數就不重新 seek。
+     手機（尤其 iOS）對高解析度影片的頻繁 seek 特別吃記憶體，容易讓分頁崩潰，
+     所以窄畫面改用較小的影片檔，門檻也放寬，減少 seek 次數。 */
+  const NARROW_VIEW = window.matchMedia('(max-aspect-ratio: 3/2)');
+  const SEEK_THRESHOLD = NARROW_VIEW.matches ? 0.07 : 0.02;
 
   /* 沉浸式影片的循環設定 */
   const AUDIO = {
@@ -79,28 +83,18 @@
     }
   }
 
-  // 只有點擊／觸控／按鍵才算瀏覽器認可的「使用者操作」，捲動不算
-  const GESTURES = ['pointerdown', 'touchstart', 'keydown'];
+  /* ⚠ 不做「第一次操作就自動開聲音」。
+     手機上捲動會產生 touchstart，被當成使用者操作後聲音就自己打開了；
+     桌機用滾輪捲動不會觸發，所以只有手機出問題。
+     現在一律只有按下右上角的聲音鍵才會開啟聲音，行為在各裝置上一致。 */
+  function dropGestureListeners() { /* 已不再註冊全域監聽，保留空函式供呼叫端使用 */ }
 
-  function dropGestureListeners() {
-    GESTURES.forEach(function (ev) { window.removeEventListener(ev, onFirstGesture); });
-  }
 
-  /* ⚠ 這裡刻意略過「點在聲音按鈕上」的情況。
-     否則按鈕的 pointerdown 會先讓 unlock() 把聲音打開，
-     接著按鈕自己的 click 再 toggle 一次又關掉 ——
-     結果就是第一次點擊只響 0.1 秒又跳回靜音。
-     點在按鈕上時，狀態一律交給按鈕的 click 處理。 */
-  function onFirstGesture(e) {
-    if (soundBtn && e && e.target && soundBtn.contains(e.target)) return;
-    unlock();
-  }
 
-  // 讀者第一次操作頁面（按鈕以外的地方）→ 解鎖聲音
+  // 讀者按下聲音鍵之後，讓已經在播的影片重新套用音訊
   function unlock() {
     if (SOUND.unlocked) return;
     SOUND.unlocked = true;
-    dropGestureListeners();
     applySound();
     // 已經在播的影片重新 play 一次，讓解除靜音後的音訊生效
     audible.forEach(function (v) {
@@ -109,10 +103,6 @@
       }
     });
   }
-
-  GESTURES.forEach(function (ev) {
-    window.addEventListener(ev, onFirstGesture, { passive: true });
-  });
 
   if (soundBtn) {
     soundBtn.addEventListener('click', function () {
@@ -238,6 +228,28 @@
   const scrubs = Array.from(document.querySelectorAll('.m-scrub')).map(function (sec) {
     const video = sec.querySelector('.stage__video');
     const o = { sec: sec, stage: sec.querySelector('.stage'), video: video, ready: false, target: 0 };
+
+    /* 窄畫面（手機直式）：直接換成事先排好直式版型的影片檔。
+       影片本身就是 1080x1920，不需要任何偵測、裁切或局部放大。
+       想換影片只要改 index.html 裡的 data-src-narrow / data-poster-narrow。 */
+    if (video && NARROW_VIEW.matches) {
+      const small  = video.dataset.srcNarrow;
+      const poster = video.dataset.posterNarrow;
+      if (poster) video.poster = poster;
+      if (small) { video.src = small; video.load(); sec.classList.add('is-narrow-src'); }
+
+      /* iOS Safari 在影片「從未播放過」之前不會把畫面畫出來，
+         只設定 currentTime 是看不到東西的。這裡靜音播一下再暫停，
+         逼它渲染第一格。 */
+      const kick = function () {
+        video.muted = true;
+        const q = video.play();
+        if (q && q.then) q.then(function () { video.pause(); }).catch(function () {});
+        else { try { video.pause(); } catch (e) {} }
+      };
+      video.addEventListener('loadeddata', kick, { once: true });
+      if (video.readyState >= 2) kick();
+    }
     if (video) {
       // metadata 載入完成前 video.duration 還不是有效數值
       const onMeta = function () {
