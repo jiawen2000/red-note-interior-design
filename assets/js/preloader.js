@@ -92,7 +92,7 @@
     : allImages.slice(0, CONFIG.WAIT_IMAGE_COUNT);
 
   // 每張照片的權重＝25 張照片總量（4.9 MB）平均分攤
-  const imgWeight = allImages.length ? 5.4 / allImages.length : 0;
+  const imgWeight = allImages.length ? 5.2 / allImages.length : 0;
 
   const imgState   = images.map(function () { return 0; });   // 0 未載完 / 1 已載完
   const videoState = videos.map(function (v) {
