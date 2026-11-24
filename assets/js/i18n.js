@@ -84,6 +84,10 @@
     btn.setAttribute('lang', en ? 'zh-Hant' : 'en');
     btn.setAttribute('aria-label', en ? '改用中文閱讀' : 'Read in English');
 
+    /* lang 要先更新，下面 reloadZhGlossary() 的非同步回呼才判斷得出
+       「現在到底是哪個語言」 */
+    lang = to;
+
     // 名詞解釋換一本字典
     if (typeof window.setGlossaryDict === 'function') {
       window.setGlossaryDict(en ? dict.glossary : null);
@@ -101,18 +105,24 @@
     if (en) u.searchParams.set('lang', 'en');
     else u.searchParams.delete('lang');
     history.replaceState(null, '', u);
-
-    lang = to;
   }
 
-  /* 切回中文時要把原本的中文名詞檔重新讀回來 */
+  /* 切回中文時要把原本的中文名詞檔重新讀回來。
+
+     ⚠ 這個 fetch 是非同步的，讀者如果 EN → 中 → EN 連點，
+     等中文檔讀回來時其實已經切回英文了，若照常套用就會變成
+     「英文介面配中文解釋」。所以回來之後要再確認一次目前的語言。 */
   let zhGlossary = null;
+  function applyZh(d) {
+    if (lang !== 'zh') return;          // 期間又切走了就不要蓋
+    window.setGlossaryDict(d);
+  }
   function reloadZhGlossary() {
-    if (zhGlossary) { window.setGlossaryDict(zhGlossary); return; }
+    if (zhGlossary) { applyZh(zhGlossary); return; }
     fetch('data/glossary.json?v=68')
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (d && d.terms) { zhGlossary = d.terms; window.setGlossaryDict(zhGlossary); }
+        if (d && d.terms) { zhGlossary = d.terms; applyZh(zhGlossary); }
       })
       .catch(function () { /* 讀不到就維持現狀，不影響閱讀 */ });
   }
