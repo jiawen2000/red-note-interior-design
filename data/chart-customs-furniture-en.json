@@ -166,5 +166,8 @@
  "hints": [
   "Click a category above to view it on its own; click again to show all categories. Hover over a bar to see the value for each category"
  ],
- "_note": "English version of chart-customs-furniture.json. Data identical; only display strings translated."
+ "_note": "English version of chart-customs-furniture.json. Data identical; only display strings translated.",
+ "i18n": {
+  "lang": "en"
+ }
 }

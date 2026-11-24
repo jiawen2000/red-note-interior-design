@@ -813,13 +813,15 @@
   "r2": 0.816,
   "label": "Linear trend"
  },
- "annotationsSrc": "data/chart-google-trends-annotations-en.json?v=87",
+ "annotationsSrc": "data/chart-google-trends-annotations-en.json?v=88",
  "hints": [
   "Hover over the line or a red dot to see the monthly figure, the event behind it and how confidently it can be attributed"
  ],
  "source": "Source: Google Trends, search term “淘寶家具” (Taobao furniture), region Taiwan, Jan 2010 – Aug 2026. Values are a relative interest index (0–100) in which 100 is the highest point in the period, not an absolute number of searches.",
  "_note": "English version of chart-google-trends.json. Data identical; only display strings translated.",
  "i18n": {
-  "keyEvent": "Key event"
+  "lang": "en",
+  "keyEvent": "Key event",
+  "seriesLabel": "Monthly search interest"
  }
 }

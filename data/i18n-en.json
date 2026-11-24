@@ -8,7 +8,7 @@
   "cover.title": "Who Is Shaping Your Home?",
   "cover.subtitle": "Inside <span class=\"brand\">Xiaohongshu</span>’s Interior Design Culture",
   "cover.meta": "By Jia-Wen Lin<br>Published December 1, 2026",
-  "cover.note": "<span class=\"cover__note-label\">Before you begin</span>\n        This is a multimedia feature. For the full experience, read it on a desktop or tablet,<br>turn on the sound using the button in the top right, and settle in somewhere comfortable.",
+  "cover.note": "<span class=\"cover__note-label\">Before you begin</span>\n        This is a multimedia feature. For the full experience, read it on a desktop or tablet, turn on the sound using the button in the top right, and settle in somewhere comfortable.",
   "cover.scroll": "Scroll",
   "footer.brand": "Who Is Shaping Your Home? Inside <span class=\"brand\">Xiaohongshu</span>’s Interior Design Culture",
   "footer.note": "Master’s Thesis in Multimedia In-depth Reporting<br>\n      Graduate Institute of Journalism, National Taiwan University<br>\n      By Jia-Wen Lin｜Academic Advisor: Ji-Lung Hsieh, Ph.D.｜Reporting Advisor: Lih-Ren Liu, Ph.D.",
@@ -153,7 +153,9 @@
   "p110": "Even so, Taobao has been company to Shaobai through a low period.",
   "p111": "He used to be a man who wanted sports cars and luxury goods, and the chase ate away at his mental health. Then the way he shopped on Taobao overturned what he thought pleasure required. “It turns out this little money can bring this much satisfaction.” On the other end of the video call, Shaobai turns a pair of sharply styled sunglasses over in his hands. They cost under NT$20, and the pleasure they give him is not one bit smaller than a million-dollar car.",
   "ui.glossaryLabel": "Glossary",
-  "ui.close": "Close"
+  "ui.close": "Close",
+  "ui.hintText": "Words marked with a dotted underline, like <span class=\"term-hint__demo\">this one</span>, can be tapped for an explanation.",
+  "ui.hintOk": "Got it"
  },
  "alt": {
   "alt1": "AI home products at the Guangzhou building and decoration fair, 1",

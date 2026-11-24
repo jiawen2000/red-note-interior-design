@@ -43,9 +43,9 @@
   card.id = 'term-hint-card';
   card.setAttribute('role', 'dialog');
   card.innerHTML =
-    '<p class="term-hint__text">像 <span class="term-hint__demo">這樣</span> ' +
+    '<p class="term-hint__text" data-i18n="ui.hintText">像 <span class="term-hint__demo">這樣</span> ' +
     '標著虛線的詞，點一下可以看解釋。</p>' +
-    '<button class="term-hint__ok" type="button">知道了</button>';
+    '<button class="term-hint__ok" type="button" data-i18n="ui.hintOk">知道了</button>';
 
   masks.forEach(function (m) { document.body.appendChild(m); });
   document.body.appendChild(ring);

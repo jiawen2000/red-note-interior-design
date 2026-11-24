@@ -105,8 +105,21 @@ html[lang="en"] body {
 html[lang="en"] .p {
   text-align: left;
   text-justify: auto;
-  hyphens: auto;
-  -webkit-hyphens: auto;
+}
+
+/* ⚠ 英文版一律不自動斷字。
+   開 hyphens: auto 會把 appetite 斷成 ap-petite，閱讀時很干擾；
+   寧可讓整個單字換到下一行，右緣不齊沒關係。 */
+html[lang="en"],
+html[lang="en"] .p,
+html[lang="en"] .caption,
+html[lang="en"] .cover__note,
+html[lang="en"] .m-immersive__caption,
+html[lang="en"] .m-scrub__caption {
+  hyphens: none;
+  -webkit-hyphens: none;
+  overflow-wrap: break-word;   /* 只有超長到一行放不下的字才強制斷 */
+  word-break: normal;
 }
 
 /* 英文標題不需要中文那麼大的字距，行高也要收一點 */

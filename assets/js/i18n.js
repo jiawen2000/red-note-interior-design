@@ -20,13 +20,13 @@
 (function () {
   'use strict';
 
-  const SRC = 'data/i18n-en.json?v=87';
+  const SRC = 'data/i18n-en.json?v=88';
 
   /* 英文版的圖表另外準備一份 JSON（圖表的標籤、圖例、註解都在資料檔裡，
      不是寫在 HTML，所以沒辦法用 data-i18n 處理）。 */
   const CHART_EN = {
-    'data/chart-google-trends.json':    'data/chart-google-trends-en.json?v=87',
-    'data/chart-customs-furniture.json': 'data/chart-customs-furniture-en.json?v=87'
+    'data/chart-google-trends.json':    'data/chart-google-trends-en.json?v=88',
+    'data/chart-customs-furniture.json': 'data/chart-customs-furniture-en.json?v=88'
   };
 
   const btn = document.getElementById('lang-toggle');

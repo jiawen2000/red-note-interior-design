@@ -253,6 +253,14 @@
 
       /* 「關鍵事件」這個字串，英文版圖表資料檔可用 i18n.keyEvent 覆寫 */
       const KEY_EVENT = (data.i18n && data.i18n.keyEvent) || '關鍵事件';
+      const EN = !!(data.i18n && data.i18n.lang === 'en');
+      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      /* 「2020-02」→ 中文「2020 年 2 月」／英文「Feb 2020」 */
+      function fmtYM(t) {
+        const y = t.slice(0, 4), m = parseInt(t.slice(5, 7), 10);
+        return EN ? MON[m - 1] + ' ' + y : y + ' 年 ' + m + ' 月';
+      }
 
       /* --- 關鍵事件標記（資料來自 data.annotationsSrc 指向的標註檔） --- */
       const marks = [];
@@ -291,7 +299,7 @@
         });
       }
 
-      function ym(t) { return t.slice(0, 4) + ' 年 ' + parseInt(t.slice(5, 7), 10) + ' 月'; }
+      function ym(t) { return fmtYM(t); }
       function tipHTML(a, v) {
         return '<b>' + ym(a.t) + '</b>　' + (a.direction || '') + ' 熱度 ' + v +
                '<br><span class="chart-tip__tag">' + (a.shortLabel || KEY_EVENT) + '</span>' +
@@ -335,8 +343,8 @@
         hoverDot.setAttribute('cx', X(i)); hoverDot.setAttribute('cy', Y(p.v));
         hoverDot.setAttribute('opacity', '1');
 
-        const ym = p.t.slice(0, 4) + ' 年 ' + parseInt(p.t.slice(5, 7), 10) + ' 月';
-        let html = '<b>' + ym + '</b>　' + (data.yLabel || '數值') + ' ' + p.v;
+        const ym = fmtYM(p.t);
+        let html = '<b>' + ym + '</b>' + (EN ? ' · ' : '　') + (data.yLabel || (EN ? 'Value' : '數值')) + ' ' + p.v;
         const hit = peakAt(i);
         if (hit) html = tipHTML(hit.a, p.v);
         showTip(html, e.clientX, e.clientY, !!hit);
@@ -352,9 +360,10 @@
         const lg = document.createElement('div');
         lg.className = 'chart-legend chart-legend--static';
         lg.innerHTML =
-          '<span class="chart-legend__item"><span class="chart-legend__line"></span>每月搜尋熱度</span>' +
+          '<span class="chart-legend__item"><span class="chart-legend__line"></span>' +
+          ((data.i18n && data.i18n.seriesLabel) || '每月搜尋熱度') + '</span>' +
           '<span class="chart-legend__item"><span class="chart-legend__line chart-legend__line--dash"></span>' +
-          (data.trend.label || '線性趨勢') + '</span>';
+          (data.trend.label || (EN ? 'Linear trend' : '線性趨勢')) + '</span>';
         outer.insertBefore(lg, box);
       }
       const lineHint = hintLines(data);
