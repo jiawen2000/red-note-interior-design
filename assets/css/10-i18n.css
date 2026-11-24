@@ -141,8 +141,35 @@ html[lang="en"] .m-scrub__caption { line-height: 1.6; letter-spacing: 0.01em; }
 /* 名詞解釋框 */
 html[lang="en"] .glossary-pop__text { line-height: 1.65; }
 
-/* 左側目錄：英文小標較長，放寬寬度並改左對齊換行 */
-html[lang="en"] .toc__text { line-height: 1.4; }
+/* --------------------------------------------------------------------------
+   左側目錄：英文小標比中文長，中文版的 white-space: nowrap 會把字裁掉
+   -------------------------------------------------------------------------- */
+
+/* 為什麼選換行而不是滑過去跑馬燈：
+   目錄是用來「掃視」的，不是逐條閱讀。跑馬燈一次只讓你看到一條、
+   還要把滑鼠停住等它跑完；而且觸控裝置沒有 hover，鍵盤操作與螢幕報讀
+   也讀不到被捲動的文字。直接換行可以十條一次看完，最長的也只佔兩行。 */
+html[lang="en"] #toc { width: 262px; }
+
+html[lang="en"] .toc__link {
+  white-space: normal;        /* 中文版維持 nowrap，不受影響 */
+  align-items: flex-start;    /* 換行後編號要對齊第一行，不要被擠到垂直置中 */
+}
+
+html[lang="en"] .toc__text {
+  line-height: 1.45;
+  hyphens: none;              /* 跟內文一致，不把單字切斷 */
+  -webkit-hyphens: none;
+}
+
+/* 編號不跟著換行 */
+html[lang="en"] .toc__num { flex: none; }
+
+/* 目錄只在 1320px 以上顯示，加寬 22px 不會擠到內文；
+   但視窗剛好卡在邊界時收窄一點比較保險 */
+@media (max-width: 1420px) {
+  html[lang="en"] #toc { width: 240px; }
+}
 
 /* 英文版的「向下滑」字距比中文窄 */
 html[lang="en"] .cover__scroll-text { letter-spacing: 0.18em; text-indent: 0.18em; }

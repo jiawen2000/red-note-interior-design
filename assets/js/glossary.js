@@ -51,7 +51,9 @@
     })
     .catch(function () {
       // 名詞檔讀不到時，把標記還原成普通文字，不影響閱讀
-      terms.forEach(function (btn) { btn.classList.add('is-plain'); });
+      document.querySelectorAll('.term[data-term]').forEach(function (btn) {
+        btn.classList.add('is-plain');
+      });
       dict = {};
     });
 
@@ -112,22 +114,37 @@
   /* ------------------------------------------------------------------------
      綁定事件
      ---------------------------------------------------------------------- */
-  terms.forEach(function (btn) {
-    btn.setAttribute('aria-expanded', 'false');
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      // 再按一次同一個名詞 = 關閉
-      if (activeBtn === btn) { close(); return; }
-      open(btn);
+  /* ⚠ 事件委派，不要把監聽器一個一個綁在按鈕上。
+     切換語言時 i18n.js 會重寫整段的 innerHTML，原本的按鈕節點會被銷毀、
+     換成全新的節點 —— 綁在舊節點上的監聽器就跟著消失，
+     英文版點名詞會完全沒反應。
+     綁在 document 上就不受節點重建影響。 */
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest ? e.target.closest('.term[data-term]') : null;
+    if (!btn || !btn.closest('#report')) return;
+    e.stopPropagation();
+    if (activeBtn === btn) { close(); return; }
+    open(btn);
+  }, true);   // 用捕獲階段，搶在下面「按框外關閉」的監聽器之前
+
+  /* aria-expanded 只是初始狀態，節點重建後由 markTerms() 重新補上 */
+  function markTerms() {
+    document.querySelectorAll('.term[data-term]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', 'false');
     });
-  });
+  }
+  markTerms();
 
   /* 給 i18n.js 用：切換語言時換掉整本名詞字典。
      換完要把已開啟的解釋框關掉，否則會留著上一個語言的內容。 */
   window.setGlossaryDict = function (d) {
     dict = d || {};
     close();
-    terms.forEach(function (btn) { btn.classList.remove('is-plain'); });
+    // 這時按鈕通常已經被 i18n.js 換成新節點，要重新查一次
+    document.querySelectorAll('.term[data-term]').forEach(function (btn) {
+      btn.classList.remove('is-plain');
+    });
+    markTerms();
   };
 
   popClose.addEventListener('click', close);

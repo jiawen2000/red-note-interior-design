@@ -21,8 +21,13 @@
   const PAD = { top: 1, bottom: 5, x: 6 };
   const GAP = 22;            // 提示框與亮燈之間的距離
 
-  const term = document.querySelector('#report .term[data-term]');
-  if (!term) { console.warn('[term-hint] 找不到任何名詞按鈕'); return; }
+  /* ⚠ 不能把按鈕節點存起來。
+     切換語言時 i18n.js 會重寫整段的 innerHTML，原本的按鈕節點會被銷毀、
+     換成全新的節點；存起來的參照就指向已經脫離畫面的舊節點，
+     getBoundingClientRect() 全是 0，提示永遠不會觸發。
+     改成每次要用的時候重新查詢。 */
+  function firstTerm() { return document.querySelector('#report .term[data-term]'); }
+  if (!firstTerm()) { console.warn('[term-hint] 找不到任何名詞按鈕'); return; }
 
   /* ------------------------------------------------------------------------
      建立元素
@@ -58,7 +63,7 @@
      定位
      ---------------------------------------------------------------------- */
   function place() {
-    const r = term.getBoundingClientRect();
+    const r = firstTerm().getBoundingClientRect();
     const vw = window.innerWidth, vh = window.innerHeight;
     const x1 = r.left - PAD.x,  x2 = r.right + PAD.x;
     const y1 = r.top - PAD.top, y2 = r.bottom + PAD.bottom;
@@ -115,9 +120,9 @@
     opened = true;
     stopWatching();
     // 手動觸發時名詞可能不在畫面上，先捲過去再定位
-    const r0 = term.getBoundingClientRect();
+    const r0 = firstTerm().getBoundingClientRect();
     if (r0.bottom < 0 || r0.top > window.innerHeight) {
-      term.scrollIntoView({ block: 'center', behavior: 'auto' });
+      firstTerm().scrollIntoView({ block: 'center', behavior: 'auto' });
     }
     card.classList.add('is-on');
     masks.forEach(function (m) { m.classList.add('is-on'); });
@@ -179,7 +184,7 @@
      觸發：名詞捲進畫面上半部就算數
      ---------------------------------------------------------------------- */
   function inZone() {
-    const r = term.getBoundingClientRect();
+    const r = firstTerm().getBoundingClientRect();
     const vh = window.innerHeight || 1;
     // 名詞一進入畫面下方就算數，讓提示早一點出現
     return r.bottom > 0 && r.top < vh * 0.78;
@@ -205,7 +210,7 @@
     window.addEventListener('scroll', tick, { passive: true });
     window.addEventListener('resize', tick);
     tick();
-    console.info('[term-hint] 已開始監看，捲到「' + term.textContent.trim() + '」就會出現');
+    console.info('[term-hint] 已開始監看，捲到「' + firstTerm().textContent.trim() + '」就會出現');
   }
 
   // 載入畫面結束後開始監看；沒有載入畫面時直接開始
