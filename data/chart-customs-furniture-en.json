@@ -1,0 +1,170 @@
+{
+ "type": "stackedBar",
+ "title": "Cabinets, tables and bed frames — the categories with the widest price gaps —\ndominate furniture imported from China",
+ "subtitle": "Value of furniture imported from China into Taiwan, 2015–2026",
+ "unit": "bn NT$",
+ "axisUnit": "NT$ billion",
+ "categories": [
+  {
+   "key": "9401",
+   "name": "Seating (sofas, chairs)",
+   "color": "#ac231a"
+  },
+  {
+   "key": "9403",
+   "name": "Other furniture (cabinets, tables, bed frames)",
+   "color": "#1B1A20"
+  },
+  {
+   "key": "9404",
+   "name": "Bedding (mattresses, duvets, pillows)",
+   "color": "#6d6b75"
+  },
+  {
+   "key": "9405",
+   "name": "Lamps and lighting",
+   "color": "#b3b1b8"
+  }
+ ],
+ "items": [
+  {
+   "label": "2015",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 42.1,
+    "9403": 39.1,
+    "9404": 22.1,
+    "9405": 30.8
+   }
+  },
+  {
+   "label": "2016",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 42.0,
+    "9403": 42.8,
+    "9404": 22.9,
+    "9405": 30.9
+   }
+  },
+  {
+   "label": "2017",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 43.6,
+    "9403": 42.8,
+    "9404": 23.4,
+    "9405": 32.3
+   }
+  },
+  {
+   "label": "2018",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 46.0,
+    "9403": 47.0,
+    "9404": 25.6,
+    "9405": 37.8
+   }
+  },
+  {
+   "label": "2019",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 50.9,
+    "9403": 68.6,
+    "9404": 27.6,
+    "9405": 41.6
+   }
+  },
+  {
+   "label": "2020",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 56.4,
+    "9403": 76.2,
+    "9404": 24.6,
+    "9405": 44.7
+   }
+  },
+  {
+   "label": "2021",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 65.6,
+    "9403": 89.9,
+    "9404": 33.6,
+    "9405": 52.0
+   }
+  },
+  {
+   "label": "2022",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 69.9,
+    "9403": 101.6,
+    "9404": 34.4,
+    "9405": 53.8
+   }
+  },
+  {
+   "label": "2023",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 74.7,
+    "9403": 104.4,
+    "9404": 41.9,
+    "9405": 52.2
+   }
+  },
+  {
+   "label": "2024",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 78.8,
+    "9403": 119.7,
+    "9404": 37.3,
+    "9405": 59.1
+   }
+  },
+  {
+   "label": "2025",
+   "sublabel": null,
+   "partial": false,
+   "values": {
+    "9401": 72.0,
+    "9403": 117.7,
+    "9404": 36.7,
+    "9405": 56.8
+   }
+  },
+  {
+   "label": "2026",
+   "sublabel": "1–7月",
+   "partial": true,
+   "values": {
+    "9401": 46.8,
+    "9403": 75.0,
+    "9404": 22.0,
+    "9405": 33.6
+   }
+  }
+ ],
+ "source": "Source: Customs import/export statistics, Customs Administration, Ministry of Finance (total import value, including re-imports); commodity codes 9401, 9403, 9404 and 9405; country of origin mainland China. 2026 figures run to July only.",
+ "tooltipMode": "valueOnly",
+ "note": "Furniture imported from China includes brand procurement, B2B trade and contract manufacturing shipped back for sale. It is not simply Taobao furniture bound for Taiwanese homes.",
+ "hints": [
+  "Click a category above to view it on its own; click again to show all categories. Hover over a bar to see the value for each category"
+ ],
+ "_note": "English version of chart-customs-furniture.json. Data identical; only display strings translated."
+}

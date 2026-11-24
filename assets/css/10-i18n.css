@@ -1,0 +1,135 @@
+/* ==========================================================================
+   10-i18n.css — 英文版介面
+
+   設計原則：中文版的樣式一律不動。
+   這支檔案只做兩件事：
+     1. 載入畫面的英文標題（中英並陳，英文字級較小）
+     2. 語言切換鈕，以及 html[lang="en"] 時才生效的英文排版覆寫
+
+   所有英文覆寫都掛在 html[lang="en"] 之下，
+   中文版（html[lang="zh-Hant"]）完全不受影響。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 載入畫面的英文標題
+   中文標題是 clamp(0.95rem, 4.6vw, 1.92rem)，英文取其約 55%，
+   讓中文仍是主標、英文是副標的層次。
+   -------------------------------------------------------------------------- */
+.loader__title-en {
+  margin: 0.9em 0 0;
+  font-size: clamp(0.72rem, 2.6vw, 1.06rem);
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: #a9a7b0;
+  text-wrap: balance;
+  max-width: 24em;
+}
+
+/* 極窄螢幕（約 360px 以下）：英文標題兩行會太擠，再收一點 */
+@media (max-width: 360px) {
+  .loader__title-en {
+    font-size: 0.68rem;
+    line-height: 1.5;
+    margin-top: 0.7em;
+  }
+}
+
+/* 螢幕很矮時（橫放手機），載入畫面容易爆版，壓縮上下間距 */
+@media (max-height: 480px) {
+  .loader__title-en { margin-top: 0.5em; font-size: 0.7rem; }
+}
+
+/* 切到英文版之後，載入畫面若還在（重新整理），中文標題就不必再顯示 */
+html[lang="en"] .loader__title    { display: none; }
+html[lang="en"] .loader__title-en {
+  font-size: clamp(0.95rem, 4.2vw, 1.7rem);
+  color: var(--c-bg);
+  font-weight: 700;
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. 語言切換鈕
+   視覺與右上角的聲音鍵一致，擺在它左邊。
+   跟著封面一起淡出（共用 --cover-text-fade），行為與聲音鍵相同。
+   -------------------------------------------------------------------------- */
+.cover__lang {
+  position: absolute;
+  top: clamp(16px, 3vh, 28px);
+  /* 聲音鍵在 right: clamp(16px,3vw,32px)，寬 44px，這裡再往左讓出 52px */
+  right: calc(clamp(16px, 3vw, 32px) + 52px);
+  z-index: 3;
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(240, 240, 240, 0.45);
+  border-radius: 50%;
+  color: var(--c-bg);
+  background: rgba(27, 26, 32, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: var(--cover-text-fade, 1);
+  transition: background 0.3s, border-color 0.3s, transform 0.3s var(--ease);
+}
+.cover__lang:hover {
+  background: rgba(27, 26, 32, 0.6);
+  border-color: rgba(240, 240, 240, 0.85);
+  transform: scale(1.06);
+}
+/* 切換中：避免連點造成重複請求 */
+.cover__lang.is-busy { opacity: 0.45; pointer-events: none; }
+
+/* --------------------------------------------------------------------------
+   3. 英文版排版覆寫
+   中文與英文的排版需求不同，這裡只改真正必要的幾項。
+   -------------------------------------------------------------------------- */
+
+/* 英文襯線字。刻意用系統字型，不另外載 webfont ——
+   這個網站的載入時間已經很吃緊，為了英文版再多載幾百 KB 不划算。 */
+html[lang="en"] {
+  --font-serif: Georgia, "Iowan Old Style", "Times New Roman", Times, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+html[lang="en"] body {
+  letter-spacing: 0;          /* 中文版的 0.02em 字距對英文太鬆 */
+  line-height: 1.75;          /* 中文版 1.9，英文不需要那麼開 */
+}
+
+/* 中文用 inter-ideograph 兩端對齊很整齊，英文會產生難看的字間空洞 */
+html[lang="en"] .p {
+  text-align: left;
+  text-justify: auto;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* 英文標題不需要中文那麼大的字距，行高也要收一點 */
+html[lang="en"] .cover__title    { letter-spacing: -0.01em; line-height: 1.12; }
+html[lang="en"] .cover__subtitle { letter-spacing: -0.005em; }
+html[lang="en"] .h3              { letter-spacing: 0; line-height: 1.35; }
+html[lang="en"] .loader__title-en{ letter-spacing: -0.005em; }
+
+/* 英文標題字數較多，封面主標按比例縮小才不會擠出畫面 */
+html[lang="en"] .cover__title    { font-size: calc(var(--fs-hero) * 0.78); }
+html[lang="en"] .cover__subtitle { font-size: calc(var(--fs-hero) * 0.46); }
+
+/* 圖說、頁尾等小字：英文行高可以再收 */
+html[lang="en"] .caption,
+html[lang="en"] .meta,
+html[lang="en"] .m-immersive__caption,
+html[lang="en"] .m-scrub__caption { line-height: 1.6; letter-spacing: 0.01em; }
+
+/* 名詞解釋框 */
+html[lang="en"] .glossary-pop__text { line-height: 1.65; }
+
+/* 左側目錄：英文小標較長，放寬寬度並改左對齊換行 */
+html[lang="en"] .toc__text { line-height: 1.4; }
+
+/* 英文版的「向下滑」字距比中文窄 */
+html[lang="en"] .cover__scroll-text { letter-spacing: 0.18em; text-indent: 0.18em; }

@@ -28,8 +28,8 @@
   pop.setAttribute('role', 'dialog');
   pop.setAttribute('aria-live', 'polite');
   pop.innerHTML =
-    '<button class="glossary-pop__close" type="button" aria-label="關閉">✕</button>' +
-    '<p class="glossary-pop__label">名詞解釋</p>' +
+    '<button class="glossary-pop__close" type="button" aria-label="關閉" data-i18n-aria="ui.close">✕</button>' +
+    '<p class="glossary-pop__label" data-i18n="ui.glossaryLabel">名詞解釋</p>' +
     '<h4 class="glossary-pop__term"></h4>' +
     '<p class="glossary-pop__text"></p>';
   document.body.appendChild(pop);
@@ -121,6 +121,14 @@
       open(btn);
     });
   });
+
+  /* 給 i18n.js 用：切換語言時換掉整本名詞字典。
+     換完要把已開啟的解釋框關掉，否則會留著上一個語言的內容。 */
+  window.setGlossaryDict = function (d) {
+    dict = d || {};
+    close();
+    terms.forEach(function (btn) { btn.classList.remove('is-plain'); });
+  };
 
   popClose.addEventListener('click', close);
   pop.addEventListener('click', function (e) { e.stopPropagation(); });

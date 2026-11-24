@@ -114,4 +114,14 @@
   window.addEventListener('resize', onScroll);
   document.addEventListener('report:ready', update);
   update();
+
+  /* 給 i18n.js 用：切換語言後小標文字變了，目錄要重抓一次 */
+  window.rebuildToc = function () {
+    heads.forEach(function (h, i) {
+      const a = nav.querySelectorAll('.toc__link')[i];
+      if (a) a.querySelector('.toc__text').textContent =
+        h.textContent.trim().replace(/\u3000/g, ' ');
+    });
+  };
+
 })();

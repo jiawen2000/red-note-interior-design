@@ -251,6 +251,9 @@
       let after = box;
       function put(node) { outer.insertBefore(node, after.nextSibling); after = node; }
 
+      /* 「關鍵事件」這個字串，英文版圖表資料檔可用 i18n.keyEvent 覆寫 */
+      const KEY_EVENT = (data.i18n && data.i18n.keyEvent) || '關鍵事件';
+
       /* --- 關鍵事件標記（資料來自 data.annotationsSrc 指向的標註檔） --- */
       const marks = [];
 
@@ -267,7 +270,7 @@
           svg.appendChild(el('line', { class: 'chart-note-line', x1: x, y1: y, x2: x, y2: PAD.top + innerH }));
 
           const g = el('g', { class: 'chart-note', tabindex: '0', role: 'button',
-                              'aria-label': '關鍵事件：' + a.t + '　' + (a.shortLabel || '') });
+                              'aria-label': KEY_EVENT + '：' + a.t + '　' + (a.shortLabel || '') });
           g.appendChild(el('circle', { class: 'chart-note-hit',   cx: x, cy: y, r: 22 }));
           g.appendChild(el('circle', { class: 'chart-note-pulse', cx: x, cy: y, r: 10 }));
           g.appendChild(el('circle', { class: 'chart-note-ring',  cx: x, cy: y, r: 10 }));
@@ -291,7 +294,7 @@
       function ym(t) { return t.slice(0, 4) + ' 年 ' + parseInt(t.slice(5, 7), 10) + ' 月'; }
       function tipHTML(a, v) {
         return '<b>' + ym(a.t) + '</b>　' + (a.direction || '') + ' 熱度 ' + v +
-               '<br><span class="chart-tip__tag">' + (a.shortLabel || '關鍵事件') + '</span>' +
+               '<br><span class="chart-tip__tag">' + (a.shortLabel || KEY_EVENT) + '</span>' +
                (a.tooltip || '');
       }
 
@@ -592,6 +595,15 @@
         box.innerHTML = '<p class="meta">圖表載入失敗（' + err.message + '）</p>';
       });
   }
+
+  /* 給 i18n.js 用：切換語言時先改 data-src，再呼叫這個重畫。
+     要清掉 drawn 旗標，drawChart() 才會重新抓資料。 */
+  window.redrawCharts = function () {
+    Array.prototype.forEach.call(canvases, function (box) {
+      delete box.dataset.drawn;
+      drawChart(box);
+    });
+  };
 
   /* 視窗寬度跨過門檻時重畫（例如轉直橫向、縮放視窗） */
   let resizeTimer = null;
