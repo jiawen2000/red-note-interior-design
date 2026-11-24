@@ -141,6 +141,15 @@ html[lang="en"] .m-scrub__caption { line-height: 1.6; letter-spacing: 0.01em; }
 /* 名詞解釋框 */
 html[lang="en"] .glossary-pop__text { line-height: 1.65; }
 
+/* 英文版的名詞標題是「英文（中文）」，最長的
+   「barred from high-end consumption（限高）」會折成兩行，
+   行高收一點、字級略縮，兩行才不會把說明文字擠下去太多。 */
+html[lang="en"] .glossary-pop__term {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  margin-bottom: 0.6rem;
+}
+
 /* --------------------------------------------------------------------------
    左側目錄：英文小標比中文長，中文版的 white-space: nowrap 會把字裁掉
    -------------------------------------------------------------------------- */

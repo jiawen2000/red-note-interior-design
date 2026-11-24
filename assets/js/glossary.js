@@ -94,7 +94,12 @@
     btn.classList.add('is-open');
     btn.setAttribute('aria-expanded', 'true');
 
-    popTerm.textContent = key;
+    /* 標題顯示「按鈕上看到的字」。
+       英文版按鈕寫的是英文、data-term 仍是中文鍵，
+       這時把中文補在括號裡，讀者才對得起來：dupe（平替）。
+       中文版兩者相同，就只顯示一次。 */
+    const label = btn.textContent.trim();
+    popTerm.textContent = (label && label !== key) ? label + '（' + key + '）' : key;
     popText.textContent = text;
 
     // 先顯示才量得到高度，量完再定位
